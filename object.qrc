@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>object/cylinder10X10.obj</file>
+        <file>object/cube10X10.obj</file>
+        <file>object/pillar1X10.obj</file>
+        <file>object/column1X10.obj</file>
+        <file>object/tube.obj</file>
+    </qresource>
+</RCC>
