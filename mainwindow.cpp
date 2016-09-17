@@ -231,18 +231,19 @@ void MainWindow::on_btnCut_clicked()
 {
     int tarnum = ui->glMain->getTarnum();
     ui->glMain->copyObj(tarObj);
+    if(ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.size()==0)return;
 
     ui->glMain->viewMgr->modelMgr[tarObj].cutByDetour();
     ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
-    ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
+    //ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
     ui->glMain->reBuffer(tarObj);
     ui->glMain->update();
 
     ui->glMain->viewMgr->modelMgr[tarnum].cutByDetour_reverse();
     ui->glMain->viewMgr->modelMgr[tarnum].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarnum].selecPoints.clear();
-    ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
+    //ui->glMain->viewMgr->modelMgr[tarnum].detourIdxs.clear();
     ui->glMain->reBuffer(tarnum);
     ui->glMain->update();
     char str[10];
