@@ -109,6 +109,16 @@ public:
     void gendetourPlane();
     void pullConnect();
     void pushConnect();
+    QVector3D detourNormal();
+    QVector3D selecPointsNormal();
+    QVector3D detourNormal_ori();
+    QVector3D selecPointsNormal_ori();
+    QVector3D selecPointsCenter();
+    QVector3D selecPointsCenter_ori();
+    QVector3D detourCenter();
+    QVector3D detourCenter_ori();
+    void reverseDetours();
+    void sortDetour();
 private:
     QMatrix4x4 scaleMatrix;
     QMatrix4x4 translationMatrix;

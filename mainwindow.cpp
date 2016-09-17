@@ -118,14 +118,13 @@ void MainWindow::on_btnTest_clicked()
 
 void MainWindow::on_edition_stateChanged(int arg1)
 {
-    int objNum = 1;
     if(arg1 == 0){
         ui->glMain->viewMgr->setControlTar(-1);
         ui->glMain->viewMgr->setControlType(0);
     }else{
          ui->glMain->viewMgr->setControlTar(tarObj);
          ui->glMain->viewMgr->setControlType(1);
-         for(int i=ui->glMain->getTarnum()-1;i>=objNum;i--)ui->glMain->deleteTar(i);
+         for(int i=ui->glMain->getTarnum_ass()-1;i>=0;i--)ui->glMain->deleteTar_ass(i);
          ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
          ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
          ui->glMain->viewMgr->modelMgr[tarObj].loadColors();
@@ -183,7 +182,6 @@ void MainWindow::on_btnCurv_clicked()
 
 void MainWindow::on_btnDetour_clicked()//tune framework
 {
-    int tarObj = 0;
     QVector3D c;
     float r;
     if(ui->glMain->getPlaneParaBySelec(tarObj,c,r)==-1)return;
@@ -193,6 +191,7 @@ void MainWindow::on_btnDetour_clicked()//tune framework
     }else{
         ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
         ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
+        ui->glMain->deleteTar_ass(assistPlaneIdx);
     }
     ui->glMain->reBuffer(tarObj);
     ui->glMain->update();
@@ -230,32 +229,32 @@ void MainWindow::on_showPlate_stateChanged(int arg1)
 
 void MainWindow::on_btnCut_clicked()
 {
-    int tarObj = 0;
     int tarnum = ui->glMain->getTarnum();
     ui->glMain->copyObj(tarObj);
 
     ui->glMain->viewMgr->modelMgr[tarObj].cutByDetour();
     ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
-    //ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
+    ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
     ui->glMain->reBuffer(tarObj);
     ui->glMain->update();
 
     ui->glMain->viewMgr->modelMgr[tarnum].cutByDetour_reverse();
     ui->glMain->viewMgr->modelMgr[tarnum].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarnum].selecPoints.clear();
-    //ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
+    ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
     ui->glMain->reBuffer(tarnum);
     ui->glMain->update();
     char str[10];
     sprintf(str,"Object %d",tarnum+1);
     ui->cmbbObject->addItem(QString(str));
+    ui->glMain->deleteTar_ass(assistPlaneIdx);
 }
 
 void MainWindow::on_btnOutput_clicked()
 {
     iglMachine.reset();
-    iglMachine.put("mainobj", ui->glMain->viewMgr->modelMgr[0].vertices, ui->glMain->viewMgr->modelMgr[0].indices);
+    iglMachine.put("mainobj", ui->glMain->viewMgr->modelMgr[tarObj].vertices, ui->glMain->viewMgr->modelMgr[tarObj].indices);
     iglMachine.writeFile("mainobj","test.obj");
 }
 
@@ -266,6 +265,7 @@ void MainWindow::on_cmbbObject_currentIndexChanged(int index)
         else ui->glMain->setVis(i,0);
     }
     tarObj = index;
+    ui->glMain->tarObj = tarObj;
     ui->glMain->update();
 }
 

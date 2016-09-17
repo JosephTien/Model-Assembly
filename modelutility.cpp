@@ -28,7 +28,7 @@ int ModelManager::calDetourByBfs(){ //bad selection? //not yet debug
         memset(visited,false,vertices.size());
         float * sum;
         sum = (float*)malloc(sizeof(bool)*vertices.size());
-        memset(sum,9999.0f,vertices.size());
+        memset(sum,FLT_MAX,vertices.size());
         int * from;
         from = (int*)malloc(sizeof(bool)*vertices.size());
         memset(from,-1,vertices.size());
@@ -175,21 +175,31 @@ bool ModelManager::checkDetour(){
         cur = tar;
         if(cur == selecIdxs[0])break;
     }
-    QVector3D v1 = getVertice(detourIdxs[0]);
-    QVector3D v2 = getVertice(detourIdxs[1]);
-    QVector3D c = (s[0]+s[1]+s[2])/3;
-    QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
-    QVector3D nv = QVector3D::crossProduct(v1-c,v2-c);
-    if(dotProduct(n,nv)<0){
-        int ds = (int)detourIdxs.size();
-        for(int i=1;i<(ds+1/2);i++){
-            unsigned int t = detourIdxs[i];
-            detourIdxs[i] = detourIdxs[ds-i];
-            detourIdxs[ds-i] = t;
-        }
-    }
     if(cur == selecIdxs[0])return true;
     return false;
+}
+
+void ModelManager::sortDetour(){
+    std::vector<QVector3D> s = getSelecPointsByIdxs();
+    QVector3D c = detourCenter();
+    QVector3D nv(0,0,0);
+    for(int i=0;i<indices.size();i+=3){
+        for(int j=0;j<3;j++){
+            int vai = indices[i+j];
+            int vbi = indices[i+(j+1)%3];
+            QVector3D va = getVertice(vai);
+            QVector3D vb = getVertice(vbi);
+            if(abs(pointDistanceToPlane(va,s[0],s[1],s[2]))<minThre && abs(pointDistanceToPlane(vb,s[0],s[1],s[2]))<minThre){
+                nv+=QVector3D::crossProduct(va-c,vb-c);
+            }
+
+        }
+    }
+    nv.normalize();
+    QVector3D nd = detourNormal();
+    if(dotProduct(nv,nd) > 0){
+        reverseDetours();
+    }
 }
 
 void ModelManager::cutByDetour_reverse(){
@@ -204,16 +214,13 @@ void ModelManager::cutByDetour_reverse(){
         visited[detourIdxs[i]]=true;
     }
     int rootIdx = -1;
-    for(int i=0;i<(int)detourIdxs.size();i++){
-        int vi = neighbor[detourIdxs[0]][i];
-        if(!visited[vi]){
-            std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
-            QVector3D c = (s[0] + s[1] + s[2])/2;
-            QVector3D n = QVector3D::crossProduct(s[0]-c, s[1]-c).normalized();
-            if(dotProduct(getVertice_ori(vi)-c,n) > 0 ){
-                rootIdx=neighbor[detourIdxs[0]][i];
-                break;
-            }
+    QVector3D c = detourCenter();
+    QVector3D n = detourNormal();
+    for(int i=0;i<(int)vertices.size()/3;i++){
+        QVector3D v = getVertice(i);
+        if(!visited[i] && dotProduct(v-c,n) > 0){
+            rootIdx=i;
+            break;
         }
     }
     queue.clear();
@@ -246,14 +253,7 @@ void ModelManager::cutByDetour_reverse(){
     fix();
     neighbor.clear();
     curvures.clear();
-
-    int ds = (int)detourIdxs.size();
-    for(int i=1;i<(ds+1/2);i++){
-        unsigned int t = detourIdxs[i];
-        detourIdxs[i] = detourIdxs[ds-i];
-        detourIdxs[ds-i] = t;
-    }
-
+    sortDetour();
     //fillByDetour();
     gendetourPlane();
     regenNormals();
@@ -273,16 +273,13 @@ void ModelManager::cutByDetour(){
         visited[detourIdxs[i]]=true;
     }
     int rootIdx = -1;
-    for(int i=0;i<(int)detourIdxs.size();i++){
-        int vi = neighbor[detourIdxs[0]][i];
-        if(!visited[vi]){
-            std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
-            QVector3D c = (s[0] + s[1] + s[2])/2;
-            QVector3D n = QVector3D::crossProduct(s[0]-c, s[1]-c).normalized();
-            if(dotProduct(getVertice_ori(vi)-c,n) < 0 ){
-                rootIdx=neighbor[detourIdxs[0]][i];
-                break;
-            }
+    QVector3D c = detourCenter();
+    QVector3D n = detourNormal();
+    for(int i=0;i<(int)vertices.size()/3;i++){
+        QVector3D v = getVertice(i);
+        if(!visited[i] && dotProduct(v-c,n) < 0){
+            rootIdx=i;
+            break;
         }
     }
     queue.clear();
@@ -315,6 +312,7 @@ void ModelManager::cutByDetour(){
     fix();
     neighbor.clear();
     curvures.clear();
+    sortDetour();
     //fillByDetour();
     gendetourPlane();
     regenNormals();
@@ -558,15 +556,15 @@ void ModelManager::gendetourPlane(){//assume sorted
         c = c + v;
     }
     c = c / (float)(detourIdxs.size());
-    QVector3D n = QVector3D::crossProduct(detourPoints[0]-c,detourPoints[1]-c).normalized();
-
+    QVector3D n = detourNormal_ori();
     float d=0,r=0;
     for(int i=1;i<(int)detourPoints.size();i++){
         d+=(detourPoints[i-1]-detourPoints[i]).length();
         r+=(c-detourPoints[i]).length();
     }
-    int rings=(int)(r/d-1);
+    int rings=((int)(r/d))-1;
     connectorFaceIdxs.clear();
+    float interval = 0.5f;
     for(int i=0;i<rings;i++){
         int vs = vertices_ori.size()/3;
         detourIdxs_next.clear();
@@ -577,14 +575,14 @@ void ModelManager::gendetourPlane(){//assume sorted
             pushNormal(n);
             pushColor(QVector3D(0.5f,0.5f,0.5f));
             detourIdxs_next.push_back(vs+j);
-            if(i>rings/2){
+            if(i>(int)(rings*interval)){
                 connectorFaceIdxs.push_back(vs+j);
             }
         }
         int ds = (int)detourIdxs_this.size();
         for(int j=0;j<ds;j++){
-            pushIndice(detourIdxs_this[(j+1)%ds],detourIdxs_this[j],detourIdxs_next[j]);
-            pushIndice(detourIdxs_next[j],detourIdxs_next[(j+1)%ds],detourIdxs_this[(j+1)%ds]);
+            pushIndice(detourIdxs_this[j],detourIdxs_this[(j+1)%ds],detourIdxs_next[j]);
+            pushIndice(detourIdxs_next[(j+1)%ds],detourIdxs_next[j],detourIdxs_this[(j+1)%ds]);
         }
         for(int j=0;j<(int)detourIdxs_this.size();j++){
             detourIdxs_this[j]=detourIdxs_next[j];
@@ -596,7 +594,7 @@ void ModelManager::gendetourPlane(){//assume sorted
     pushColor(QVector3D(0.5f,0.5f,0.5f));
     int ds = (int)detourIdxs_this.size();
     for(int i=0;i<ds;i++){
-        pushIndice(detourIdxs_this[(i+1)%ds],detourIdxs_this[i],ci);
+        pushIndice(detourIdxs_this[i],detourIdxs_this[(i+1)%ds],ci);
     }
     connectorFaceIdxs.push_back(ci);
 }
@@ -704,15 +702,7 @@ void ModelManager::regenByPlateIntersec(){//must use model vertices, check all v
 
 void ModelManager::pullConnect(){
     if(connectorFaceIdxs.size()==0)return;
-    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
-    QVector3D v1= getVertice_ori(selecIdxs[0]);
-    QVector3D v2= getVertice_ori(selecIdxs[1]);
-    QVector3D c = QVector3D(0,0,0);
-    for(int i=0;i<(int)detourIdxs.size();i++){
-        c = c + getVertice_ori(detourIdxs[i]);
-    }
-    c = c / detourIdxs.size();
-    QVector3D n = QVector3D::crossProduct(v1-c,v2-c).normalized();
+    QVector3D n = detourNormal_ori();
     for(int i=0;i<(int)connectorFaceIdxs.size();i++){
         QVector3D v = getVertice_ori(connectorFaceIdxs[i]);
         v = v + n * 5.0f / scalex;
@@ -726,15 +716,8 @@ void ModelManager::pullConnect(){
 
 void ModelManager::pushConnect(){
     if(connectorFaceIdxs.size()==0)return;
-    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
-    QVector3D v1= getVertice_ori(selecIdxs[0]);
-    QVector3D v2= getVertice_ori(selecIdxs[1]);
-    QVector3D c = QVector3D(0,0,0);
-    for(int i=0;i<(int)detourIdxs.size();i++){
-        c = c + getVertice_ori(detourIdxs[i]);
-    }
-    c = c / detourIdxs.size();
-    QVector3D n = QVector3D::crossProduct(v1-c,v2-c).normalized();
+    if(connectorFaceIdxs.size()==0)return;
+    QVector3D n = detourNormal_ori();
     for(int i=0;i<(int)connectorFaceIdxs.size();i++){
         QVector3D v = getVertice_ori(connectorFaceIdxs[i]);
         v = v - n * 5.0f / scalex;
@@ -746,4 +729,78 @@ void ModelManager::pushConnect(){
     applyed=false;applyModelMatrix();
 }
 
+QVector3D ModelManager::detourNormal(){
+    QVector3D c(0,0,0);
+    std::vector<QVector3D> detourPoints;
+    for(int i=0;i<(int)detourIdxs.size();i++){
+        detourPoints.push_back(getVertice(detourIdxs[i]));
+        c += detourPoints[i];
+    }
+    c /= (float)detourPoints.size();
+    QVector3D n(0,0,0);
+    for(int i=1;i<(int)detourPoints.size();i++){
+        n += QVector3D::crossProduct(detourPoints[i-1]-c, detourPoints[i]-c);
+    }
+    return n.normalized();
+}
 
+QVector3D ModelManager::selecPointsNormal(){
+    std::vector<QVector3D> s = getSelecPointsByIdxs();
+    QVector3D c = (s[0]+s[1]+s[2])/3;
+    QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
+    return n;
+}
+
+QVector3D ModelManager::detourNormal_ori(){
+    QVector3D c(0,0,0);
+    std::vector<QVector3D> detourPoints;
+    for(int i=0;i<(int)detourIdxs.size();i++){
+        detourPoints.push_back(getVertice_ori(detourIdxs[i]));
+        c += detourPoints[i];
+    }
+    c /= (float)detourPoints.size();
+    QVector3D n(0,0,0);
+    for(int i=1;i<(int)detourPoints.size();i++){
+        n += QVector3D::crossProduct(detourPoints[i-1]-c, detourPoints[i]-c);
+    }
+    return n.normalized();
+}
+
+QVector3D ModelManager::selecPointsNormal_ori(){
+    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
+    QVector3D c = (s[0]+s[1]+s[2])/3;
+    QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
+    return n;
+}
+void ModelManager::reverseDetours(){
+    int ds = (int)detourIdxs.size();
+    for(int i=1;i<(ds+1)/2;i++){
+        unsigned int t = detourIdxs[i];
+        detourIdxs[i] = detourIdxs[ds-i];
+        detourIdxs[ds-i] = t;
+    }
+}
+QVector3D ModelManager::selecPointsCenter(){
+    std::vector<QVector3D> s = getSelecPointsByIdxs();
+    return (s[0]+s[1]+s[2])/3;
+}
+QVector3D ModelManager::selecPointsCenter_ori(){
+    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
+    return (s[0]+s[1]+s[2])/3;
+}
+QVector3D ModelManager::detourCenter(){
+    QVector3D c(0,0,0);
+    for(int i=0;i<detourIdxs.size();i++){
+        QVector3D v = getVertice(detourIdxs[i]);
+        c+=v;
+    }
+    return c/detourIdxs.size();
+}
+QVector3D ModelManager::detourCenter_ori(){
+    QVector3D c(0,0,0);
+    for(int i=0;i<detourIdxs.size();i++){
+        QVector3D v = getVertice_ori(detourIdxs[i]);
+        c+=v;
+    }
+    return c/detourIdxs.size();
+}

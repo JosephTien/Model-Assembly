@@ -349,7 +349,6 @@ QVector3D ModelViewer::rayIntersec(Ray3 ray,std::vector<float> verts, std::vecto
 void ModelViewer::mousePressEvent(QMouseEvent *event)
 {
     if(selectMode){
-        int tarObj=0;
         if(viewMgr->getControlType()==0){
             winw=this->geometry().width();
             winh=this->geometry().height();

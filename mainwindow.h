@@ -57,6 +57,7 @@ private:
     Ui::MainWindow *ui;
     IglMachine iglMachine;
     int tarObj = 0;
+    int assistPlaneIdx = 0;
 };
 
 #endif // MAINWINDOW_H

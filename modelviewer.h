@@ -61,6 +61,7 @@ public:
     int getPlaneParaBySelec(int tarObj, QVector3D &c, float &r);
     int curSelecTar = 0;
     int assistMode = 0;
+    int tarObj=0;
     void copyObj(int tar);
 
 protected:
