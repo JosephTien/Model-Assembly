@@ -9,7 +9,7 @@
  */
 void setOpenGLSurfaceFormat()
 {
-    QSurfaceFormat format;
+    QSurfaceFormat format; 
     format.setVersion(4, 1);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setDepthBufferSize(24);

@@ -12,6 +12,7 @@ QMatrix4x4 ModelManager::GetScaleMatrix() {
 }
 
 void ModelManager::normalize(float val){
+    float transx,transy,transz;
     float max=vertices_ori[0],min=vertices_ori[0];
     for(int i=0;i<(int)vertices_ori.size();i+=3){
         if (max < vertices_ori[i]){
@@ -20,6 +21,7 @@ void ModelManager::normalize(float val){
         if (min > vertices_ori[i]){
             min = vertices_ori[i];
         }
+        transx += vertices_ori[i]/(vertices_ori.size()/3);
     }
     float mul = val / (max - min);
 
@@ -31,6 +33,7 @@ void ModelManager::normalize(float val){
         if (min > vertices_ori[i]){
             min = vertices_ori[i];
         }
+        transy += vertices_ori[i]/(vertices_ori.size()/3);
     }
     mul = val / (max - min) < mul ? val / (max - min) : mul;
 
@@ -42,9 +45,14 @@ void ModelManager::normalize(float val){
         if (min > vertices_ori[i]){
             min = vertices_ori[i];
         }
+        transz += vertices_ori[i]/(vertices_ori.size()/3);
     }
     mul = val / (max - min) < mul ? val / (max - min) : mul;
+
     SetScale(mul,mul,mul);
+    transx*=mul;transy*=mul;transz*=mul;
+    //translate(QVector3D(-transx,-transy,-transz));
+    printf("%f/%f/%f",-transx,-transy,-transz);std::cout<<std::endl;
 }
 
 void ModelManager::genRandomColor(){
@@ -217,8 +225,14 @@ void ModelManager::regenNormals(){
         normals.push_back(norms[i].z());
     }
 }
-void ModelManager::pushVertice_ori(QVector3D v){
+void ModelManager::putVertice_ori(unsigned int idx,QVector3D v){
+    vertices_ori[idx*3]=v.x();
+    vertices_ori[idx*3+1]=v.y();
+    vertices_ori[idx*3+2]=v.z();
+}
+unsigned int ModelManager::pushVertice_ori(QVector3D v){
     vertices_ori.push_back(v.x());vertices_ori.push_back(v.y());vertices_ori.push_back(v.z());
+    return vertices_ori.size()/3-1;
 }
 void ModelManager::pushColor(QVector3D c){
     colors.push_back(c.x());colors.push_back(c.y());colors.push_back(c.z());

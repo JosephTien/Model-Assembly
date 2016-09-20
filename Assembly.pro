@@ -19,7 +19,7 @@ SOURCES += main.cpp\
         modelviewer.cpp\
         standarshader.cpp\
         objLoader.cpp \
-    modelutility.cpp
+        modelutility.cpp
 
 HEADERS  += mainwindow.h \
         pch.h\
@@ -28,7 +28,8 @@ HEADERS  += mainwindow.h \
         modelviewer.h\
         standarshader.h\
         iglmachine.h \
-        tiny_obj_loader.h
+        tiny_obj_loader.h \
+    looplist.h
 
 PRECOMPILED_HEADER = pch.h
 QMAKE_CXXFLAGS_DEBUG -= -g

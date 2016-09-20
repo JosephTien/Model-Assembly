@@ -138,6 +138,7 @@ void ModelViewer::load(const char* filename){
     viewMgr->modelMgr[tarnum-1].indices = indices;
     viewMgr->modelMgr[tarnum-1].vertices_ori = positions;
     viewMgr->modelMgr[tarnum-1].normals = normals;
+    viewMgr->modelMgr[tarnum-1].regenNormals();
     viewMgr->modelMgr[tarnum-1].colors = colors;
     viewMgr->modelMgr[tarnum-1].saveColors();
 }
@@ -298,7 +299,9 @@ void ModelViewer::paintGL()
 
 void ModelViewer::resizeGL(int w, int h)
 {
-    viewportSize = QSize(w, h);
+    dpr = QPaintDevice::devicePixelRatio();
+
+    viewportSize = QSize(w*dpr, h*dpr);
     viewportAspect = (float)w / (float)h;
 }
 

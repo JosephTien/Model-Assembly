@@ -17,6 +17,21 @@ MainWindow::~MainWindow()
 }
 
 bool quickmode=true;
+//void testMatrix(){
+//    QVector3D a(0,1.0f,0);
+//    QVector3D b(0,0,0);
+//    QVector3D c(1.0f,0,0);
+//    QVector3D n1(1.0f,0,0);
+//    QVector3D n2(0,1.0f,0);
+//    QVector3D c1 = (a+b)/2;
+//    QVector3D c2 = (b+c)/2;
+//    float fillor[6];
+//    fillor[0] =  n2.x();fillor[1] =  n2.y();fillor[2] =  n2.z();
+//    fillor[3] = -n1.x();fillor[4] = -n1.y();fillor[5] = -n1.z();
+//    QMatrix3x2 M(fillor);
+//    QVector3D heart = n2*((c1-c2)/M).x()+c2;
+//    printf("%f/%f/%f/",heart.x().heart.y(),heart.z());print("");
+//}
 void MainWindow::on_btnLoad_clicked()
 {
     if(quickmode){
@@ -189,10 +204,11 @@ void MainWindow::on_btnDetour_clicked()//tune framework
     if(flag==1){
         ui->glMain->viewMgr->modelMgr[tarObj].paintDetour();
     }else{
-        ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
-        ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
+        //ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
+        //ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
         ui->glMain->deleteTar_ass(assistPlaneIdx);
     }
+    ui->glMain->viewMgr->modelMgr[tarObj].connectorFaceIdxs.clear();
     ui->glMain->reBuffer(tarObj);
     ui->glMain->update();
 }
@@ -236,14 +252,14 @@ void MainWindow::on_btnCut_clicked()
     ui->glMain->viewMgr->modelMgr[tarObj].cutByDetour();
     ui->glMain->viewMgr->modelMgr[tarObj].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarObj].selecPoints.clear();
-    //ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
+    ui->glMain->viewMgr->modelMgr[tarObj].detourIdxs.clear();
     ui->glMain->reBuffer(tarObj);
     ui->glMain->update();
 
     ui->glMain->viewMgr->modelMgr[tarnum].cutByDetour_reverse();
     ui->glMain->viewMgr->modelMgr[tarnum].selecIdxs.clear();
     ui->glMain->viewMgr->modelMgr[tarnum].selecPoints.clear();
-    //ui->glMain->viewMgr->modelMgr[tarnum].detourIdxs.clear();
+    ui->glMain->viewMgr->modelMgr[tarnum].detourIdxs.clear();
     ui->glMain->reBuffer(tarnum);
     ui->glMain->update();
     char str[10];

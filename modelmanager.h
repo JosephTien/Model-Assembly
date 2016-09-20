@@ -1,6 +1,7 @@
 #ifndef MODELMANAGER_H
 #define MODELMANAGER_H
 #include "pch.h"
+#include "looplist.h"
 class Edge{
 public:
     Edge(unsigned int ia, unsigned int ib){
@@ -54,6 +55,8 @@ public:
     std::vector<int> detourIdxs;
     std::set<Edge> edges;
     std::vector<unsigned int> connectorFaceIdxs;
+    QVector3D connectorNormal_ori;
+    int connectorState = 0;
     /*basic management function*/
     void SetScale(float x, float y, float z);
     void normalize(float val);
@@ -82,7 +85,8 @@ public:
     void loadColors(){if(colors_ori.size()>0)colors=colors_ori;}
     void paintSelecIdxs();
     void paintDetour();
-    void pushVertice_ori(QVector3D v);
+    unsigned int pushVertice_ori(QVector3D v);
+    void putVertice_ori(unsigned int idx,QVector3D v);
     void pushColor(QVector3D c);
     void pushNormal(QVector3D n);
     void pushIndice(unsigned int a, unsigned int b, unsigned int c);
@@ -106,7 +110,12 @@ public:
     float pointDistanceToPlane(QVector3D v, QVector3D s1, QVector3D s2, QVector3D s3);
     float dotProduct(QVector3D a,QVector3D b);
     bool checkDetour();
+    void gendetourPlane(QVector3D c);
     void gendetourPlane();
+    void gendetourPlane_simple(QVector3D c);
+    void gendetourPlane_patch();
+    void gendetourPlane_convex();
+    void gendetourPlane_convex(std::vector<int> detourIdxs_this);
     void pullConnect();
     void pushConnect();
     QVector3D detourNormal();
@@ -117,6 +126,8 @@ public:
     QVector3D selecPointsCenter_ori();
     QVector3D detourCenter();
     QVector3D detourCenter_ori();
+    QVector3D detourNormal_ori(std::vector<int> detourIdxs_this);
+    QVector3D detourCenter_ori(std::vector<int> detourIdxs_this);
     void reverseDetours();
     void sortDetour();
 private:
@@ -129,5 +140,9 @@ private:
     float scalex, scaley, scalez;
     bool applyed = true;
     float minThre = (float)1.0e-5;
+    std::vector<std::vector<int>> detourIdxsQueue;
+    int detourIdxsQueue_flag = 0;
+    std::vector<std::vector<int>> detourIdxsList;
+    std::vector<QVector3D> detourCenterList;
 };
 #endif // MODELMANAGER_H

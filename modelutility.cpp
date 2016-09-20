@@ -255,7 +255,8 @@ void ModelManager::cutByDetour_reverse(){
     curvures.clear();
     sortDetour();
     //fillByDetour();
-    gendetourPlane();
+    gendetourPlane();//gendetourPlane_convex();
+    connectorNormal_ori = detourNormal_ori();
     regenNormals();
     setColors(0.5f,0.5f,0.5f);
     applyed=false;applyModelMatrix();
@@ -314,7 +315,15 @@ void ModelManager::cutByDetour(){
     curvures.clear();
     sortDetour();
     //fillByDetour();
-    gendetourPlane();
+
+//    std::vector<int> detourIdxs_temp = detourIdxs;
+//    detourIdxs.clear();
+//    for(int i=0;i<detourIdxs_temp.size()/2;i++){
+//        detourIdxs.push_back(detourIdxs_temp[i]);
+//    }
+    gendetourPlane();//gendetourPlane_convex();//gendetourPlane_patch();//gendetourPlane();
+
+    connectorNormal_ori = detourNormal_ori();
     regenNormals();
     setColors(0.5f,0.5f,0.5f);
     applyed=false;applyModelMatrix();
@@ -544,18 +553,172 @@ bool ModelManager::isCrossPlane(QVector3D v1, QVector3D v2, QVector3D s1, QVecto
     }
     return false;
 }
-void ModelManager::gendetourPlane(){//assume sorted
+
+void ModelManager::gendetourPlane_convex(){
+    gendetourPlane_convex(detourIdxs);
+    while(detourIdxsQueue_flag < detourIdxsQueue.size()){
+        gendetourPlane_convex(detourIdxsQueue[detourIdxsQueue_flag]);
+        detourIdxsQueue_flag++;
+    }
+    for(int i=detourIdxsList.size()-1;i>0;i--){
+        detourIdxs = detourIdxsList[i];
+//        gendetourPlane(detourCenterList[i]);
+        gendetourPlane_simple(detourCenterList[i]);
+    }
+    detourIdxs = detourIdxsList[0];
+    gendetourPlane(detourCenterList[0]);
+
+    detourIdxsQueue.clear();
+    detourIdxsList.clear();
+    detourCenterList.clear();
+}
+void ModelManager::gendetourPlane_convex(std::vector<int> detourIdxs_this){
+    LoopList looplist;
+    looplist.assign(detourIdxs_this);
+    QVector3D planeNorm  = detourNormal_ori(detourIdxs_this);
+    QVector3D centerVert = detourCenter_ori(detourIdxs_this);
+    LoopList::ListNode * endi = looplist.curNode;
+    int cnt=looplist.size();
+    bool prevbad=false;
+    do{
+        QVector3D iv = getVertice_ori(looplist.getCurIdx());
+        LoopList::ListNode * j    = looplist.curNode->next;
+        LoopList::ListNode * endj = looplist.curNode;
+        bool bad=false;
+        while(j->next!=endj){
+            QVector3D jv1 = getVertice_ori(j->idx);
+            QVector3D jv2 = getVertice_ori(j->next->idx);
+            QVector3D ivc = centerVert-iv;
+            QVector3D ivjv1 = jv1-iv;
+            QVector3D ivjv2 = jv2-iv;
+            QVector3D t1 = QVector3D::crossProduct(ivjv2,ivc);
+            QVector3D t2 = QVector3D::crossProduct(ivc,ivjv1);
+            QVector3D t3 = QVector3D::crossProduct(ivjv2,ivjv1);
+            if(dotProduct(t1,t2)>0 && ivc.length()>ivjv1.length()){
+                bad=true;
+                break;
+            }
+            j=j->next;
+        }
+        if(bad){
+            if(!prevbad){
+                detourIdxsQueue.push_back(std::vector<int>());
+            }
+            detourIdxsQueue[detourIdxsQueue.size()-1].push_back(looplist.getCurIdx());
+            looplist.deleteNode();
+        }
+        prevbad=bad;
+        looplist.forward();
+        cnt--;
+    }while(cnt>0);
+
+//    for(int i=0;i<looplistQueue.size();i++){
+//        detourIdxs.clear();
+//        detourIdxs = looplistQueue[i];
+//        gendetourPlane();
+//    }
+
+//    detourIdxs.clear();
+//    detourIdxs = looplist.getIdxs();
+//    gendetourPlane(centerVert);
+    detourIdxsList.push_back(looplist.getIdxs());
+    detourCenterList.push_back(centerVert);
+    looplist.clear();
+}
+
+void ModelManager::gendetourPlane_patch(){
+    LoopList looplist;
+    looplist.assign(detourIdxs);
+    QVector3D planeNorm = detourNormal_ori();
+    QVector3D centerVert = detourCenter_ori();
+    int ds = detourIdxs.size();
+    float d=0;
+    for(int i=1;i<ds;i++){
+        d+=(getVertice_ori(detourIdxs[i])-getVertice_ori(detourIdxs[i-1])).length();
+    }d/=ds;
+    int thre1 = 5;
+    //while(looplist.cnt>100){
+    for(int cnt=0;cnt<1500 && looplist.cnt>ds/5;cnt++){
+        printf("%d",looplist.cnt);print("");
+        unsigned int prevIdx=looplist.getPrevIdx();
+        unsigned int curIdx =looplist.getCurIdx();
+        unsigned int nextIdx=looplist.getNextIdx();
+        QVector3D prevVert=getVertice_ori(prevIdx);
+        QVector3D curVert=getVertice_ori(curIdx);
+        QVector3D nextVert=getVertice_ori(nextIdx);
+        QVector3D prevVec = curVert-prevVert;
+        QVector3D curVec = nextVert-curVert;
+        QVector3D crossVec = nextVert-prevVert;
+        QVector3D centerVec = centerVert-curVert;
+        if(dotProduct( QVector3D::crossProduct(prevVec,curVec), planeNorm)>0){
+            if(false){
+//            }else if(crossVec.length()<=curVec.length()&&crossVec.length()<=prevVec.length()){
+//                pushIndice(prevIdx,curIdx,nextIdx);
+//                looplist.deleteNode();
+//                looplist.forward();
+            }else if(acosf(dotProduct(-prevVec.normalized(),curVec.normalized())) < M_PI/2){//90度
+                pushIndice(prevIdx,curIdx,nextIdx);
+                looplist.deleteNode();
+                looplist.forward();
+//            }else if(curVec.length()/prevVec.length() < 1/thre1){
+//                pushIndice(prevIdx,curIdx,nextIdx);
+//                looplist.deleteNode();
+//                looplist.forward();
+//            }else if(curVec.length()/prevVec.length() > thre1){
+//                pushIndice(prevIdx,curIdx,nextIdx);
+//                looplist.deleteNode();
+//                looplist.forward();
+            }else{
+                QVector3D c1 = (prevVert+curVert)/2;
+                QVector3D c2 = (curVert+nextVert)/2;
+                QVector3D n1 = QVector3D::crossProduct(planeNorm,prevVec).normalized();
+                QVector3D n2 = QVector3D::crossProduct(planeNorm,curVec).normalized();
+                float t = ((n1.y()*(c1-c2).x())-n1.x()*(c1-c2).y())/(n2.x()*n1.y()-n2.y()*n1.x());
+                QVector3D co = c2+t*n2;
+                QVector3D no = (co-curVert).normalized();
+
+                QVector3D newVert = no*d + curVert;
+                unsigned int newIdx = pushVertice_ori(newVert);
+                pushNormal(planeNorm);
+                pushColor(QVector3D(0.5f,0.5f,0.5f));
+                pushIndice(prevIdx,curIdx,newIdx);
+                pushIndice(newIdx,curIdx,nextIdx);
+                looplist.deleteNode();
+                looplist.insertNode(newIdx);
+                looplist.forward();
+//            }else{
+//                if(dotProduct(QVector3D::crossProduct(centerVec,-prevVec),QVector3D::crossProduct(curVec,centerVec))>0){
+//                    QVector3D newVert = centerVec.normalized()*d + curVert;
+//                    //QVector3D newVert = curVec - prevVec + curVert;
+//                    unsigned int newIdx = pushVertice_ori(newVert);
+//                    pushNormal(planeNorm);
+//                    pushColor(QVector3D(0.5f,0.5f,0.5f));
+//                    pushIndice(prevIdx,curIdx,newIdx);
+//                    pushIndice(newIdx,curIdx,nextIdx);
+//                    looplist.deleteNode();
+//                    looplist.insertNode(newIdx);
+//                    looplist.forward();
+//                }
+            }
+        }
+        looplist.forward();
+    }
+}
+void ModelManager::gendetourPlane(){
+    QVector3D c = detourCenter_ori();
+    gendetourPlane(c);
+}
+bool specialDense = false;
+void ModelManager::gendetourPlane(QVector3D c){//assume sorted, problem of go through
     std::vector<QVector3D> detourPoints;
+    std::vector<QVector3D> deformPoints;
     std::vector<unsigned int> detourIdxs_this;
     std::vector<unsigned int> detourIdxs_next;
-    QVector3D c(0.0f,0.0f,0.0f);
     for(int i=0;i<(int)detourIdxs.size();i++){
         detourIdxs_this.push_back(detourIdxs[i]);
         QVector3D v = getVertice_ori(detourIdxs[i]);
         detourPoints.push_back(v);
-        c = c + v;
     }
-    c = c / (float)(detourIdxs.size());
     QVector3D n = detourNormal_ori();
     float d=0,r=0;
     for(int i=1;i<(int)detourPoints.size();i++){
@@ -563,41 +726,100 @@ void ModelManager::gendetourPlane(){//assume sorted
         r+=(c-detourPoints[i]).length();
     }
     int rings=((int)(r/d))-1;
+    if(specialDense)rings=1000;
     connectorFaceIdxs.clear();
     float interval = 0.5f;
+    bool simp=true;
+    float divcnt = 0.5;
     for(int i=0;i<rings;i++){
-        int vs = vertices_ori.size()/3;
-        detourIdxs_next.clear();
-        for(int j=0;j<(int)detourPoints.size();j++){
-            QVector3D arr = (c-detourPoints[j]);
-            QVector3D v = detourPoints[j] + (arr *((i+1.0f)/(rings+1.0f)));
-            pushVertice_ori(v);
-            pushNormal(n);
-            pushColor(QVector3D(0.5f,0.5f,0.5f));
-            detourIdxs_next.push_back(vs+j);
-            if(i>(int)(rings*interval)){
-                connectorFaceIdxs.push_back(vs+j);
-            }
-        }
+        int vs = (int)vertices_ori.size()/3;
         int ds = (int)detourIdxs_this.size();
-        for(int j=0;j<ds;j++){
-            pushIndice(detourIdxs_this[j],detourIdxs_this[(j+1)%ds],detourIdxs_next[j]);
-            pushIndice(detourIdxs_next[(j+1)%ds],detourIdxs_next[j],detourIdxs_this[(j+1)%ds]);
+        detourIdxs_next.clear();
+        simp = false;
+        if((rings+1-i)<=(rings+1)*divcnt){
+            divcnt/=2;
+            simp = true;
         }
-        for(int j=0;j<(int)detourIdxs_this.size();j++){
-            detourIdxs_this[j]=detourIdxs_next[j];
+        if(!simp){
+            for(int j=0;j<ds;j++){
+                QVector3D vo = getVertice_ori(detourIdxs_this[j]);
+                QVector3D vb = getVertice_ori(detourIdxs_this[(j+ds-1)%ds]);
+                QVector3D vf = getVertice_ori(detourIdxs_this[(j+1)%ds]);
+                QVector3D voc = c - vo;
+                QVector3D vn = voc/(rings+1.0f-i);
+                QVector3D v = vo + vn;
+                pushVertice_ori(v);
+                pushNormal(n);
+                pushColor(QVector3D(0.5f,0.5f,0.5f));
+                detourIdxs_next.push_back(vs+j);
+                if(i>(int)(rings*interval)){
+                    connectorFaceIdxs.push_back(vs+j);
+                }
+            }
+            for(int j=0;j<ds;j++){
+                pushIndice(detourIdxs_this[j],detourIdxs_this[(j+1)%ds],detourIdxs_next[j]);
+                pushIndice(detourIdxs_next[(j+1)%ds],detourIdxs_next[j],detourIdxs_this[(j+1)%ds]);
+            }
+        }else{
+            for(int j=1;j<ds;j+=2){
+                QVector3D vo = getVertice_ori(detourIdxs_this[j]);
+                QVector3D v = vo + (c-vo)/(rings+1.0f-i);
+                pushVertice_ori(v);
+                pushNormal(n);
+                pushColor(QVector3D(0.5f,0.5f,0.5f));
+                detourIdxs_next.push_back(vs+j/2);
+                if(i>(int)(rings*interval)){
+                    connectorFaceIdxs.push_back(vs+j/2);
+                }
+            }
+            int j=1;
+            for(;j<ds;j+=2){
+                pushIndice(detourIdxs_this[j-1],detourIdxs_this[j],detourIdxs_next[j/2]);
+                pushIndice(detourIdxs_this[j],detourIdxs_this[(j+1)%ds],detourIdxs_next[j/2]);
+                if(j/2>0){
+                    pushIndice(detourIdxs_this[j-1],detourIdxs_next[j/2],detourIdxs_next[j/2-1]);
+                }
+            }
+            j-=2;
+            if(j==ds-2){
+                pushIndice(detourIdxs_next[0],detourIdxs_next[j/2],detourIdxs_this[j+1]);
+                pushIndice(detourIdxs_next[0],detourIdxs_this[j+1],detourIdxs_this[0]);
+            }else if(j==ds-1){
+                pushIndice(detourIdxs_next[0],detourIdxs_next[j/2],detourIdxs_this[0]);
+            }
+
         }
+
+        detourIdxs_this.clear();
+        for(int j=0;j<(int)detourIdxs_next.size();j++){
+            detourIdxs_this.push_back(detourIdxs_next[j]);
+        }
+        if(detourIdxs_this.size()<6)break;
     }
+        int ci = vertices_ori.size()/3;
+        pushVertice_ori(c);
+        pushNormal(n);
+        pushColor(QVector3D(0.5f,0.5f,0.5f));
+        int dts = (int)detourIdxs_this.size();
+        for(int i=0;i<dts;i++){
+            pushIndice(detourIdxs_this[i],detourIdxs_this[(i+1)%dts],ci);
+        }
+        connectorFaceIdxs.push_back(ci);
+}
+
+void ModelManager::gendetourPlane_simple(QVector3D c){
+    //QVector3D c = detourCenter_ori();
+    QVector3D n = detourNormal_ori();
     int ci = vertices_ori.size()/3;
     pushVertice_ori(c);
     pushNormal(n);
     pushColor(QVector3D(0.5f,0.5f,0.5f));
-    int ds = (int)detourIdxs_this.size();
+    int ds = (int)detourIdxs.size();
     for(int i=0;i<ds;i++){
-        pushIndice(detourIdxs_this[i],detourIdxs_this[(i+1)%ds],ci);
+        pushIndice(detourIdxs[i],detourIdxs[(i+1)%ds],ci);
     }
-    connectorFaceIdxs.push_back(ci);
 }
+
 void ModelManager::regenByPlateIntersec(){//must use model vertices, check all vertices;
     if(selecIdxs.size()<3)return;
     std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
@@ -702,7 +924,7 @@ void ModelManager::regenByPlateIntersec(){//must use model vertices, check all v
 
 void ModelManager::pullConnect(){
     if(connectorFaceIdxs.size()==0)return;
-    QVector3D n = detourNormal_ori();
+    QVector3D n = connectorNormal_ori;
     for(int i=0;i<(int)connectorFaceIdxs.size();i++){
         QVector3D v = getVertice_ori(connectorFaceIdxs[i]);
         v = v + n * 5.0f / scalex;
@@ -717,7 +939,7 @@ void ModelManager::pullConnect(){
 void ModelManager::pushConnect(){
     if(connectorFaceIdxs.size()==0)return;
     if(connectorFaceIdxs.size()==0)return;
-    QVector3D n = detourNormal_ori();
+    QVector3D n = connectorNormal_ori;
     for(int i=0;i<(int)connectorFaceIdxs.size();i++){
         QVector3D v = getVertice_ori(connectorFaceIdxs[i]);
         v = v - n * 5.0f / scalex;
@@ -749,6 +971,21 @@ QVector3D ModelManager::selecPointsNormal(){
     QVector3D c = (s[0]+s[1]+s[2])/3;
     QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
     return n;
+}
+
+QVector3D ModelManager::detourNormal_ori(std::vector<int> detourIdxs_this){
+    QVector3D c(0,0,0);
+    std::vector<QVector3D> detourPoints;
+    for(int i=0;i<(int)detourIdxs_this.size();i++){
+        detourPoints.push_back(getVertice_ori(detourIdxs_this[i]));
+        c += detourPoints[i];
+    }
+    c /= (float)detourPoints.size();
+    QVector3D n(0,0,0);
+    for(int i=1;i<(int)detourPoints.size();i++){
+        n += QVector3D::crossProduct(detourPoints[i-1]-c, detourPoints[i]-c);
+    }
+    return n.normalized();
 }
 
 QVector3D ModelManager::detourNormal_ori(){
@@ -803,4 +1040,13 @@ QVector3D ModelManager::detourCenter_ori(){
         c+=v;
     }
     return c/detourIdxs.size();
+}
+
+QVector3D ModelManager::detourCenter_ori(std::vector<int> detourIdxs_this){
+    QVector3D c(0,0,0);
+    for(int i=0;i<detourIdxs_this.size();i++){
+        QVector3D v = getVertice_ori(detourIdxs_this[i]);
+        c+=v;
+    }
+    return c/detourIdxs_this.size();
 }

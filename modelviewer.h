@@ -91,6 +91,7 @@ protected:
     //ViewManager *viewMgr;
     QSize viewportSize;
     float viewportAspect;
+    int dpr;
 
     std::vector<float> positions;
     std::vector<float> normals;
