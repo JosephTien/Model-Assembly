@@ -8,6 +8,8 @@
 #include <igl/copyleft/cgal/CSGTree.h>
 #include <Eigen/Core>
 
+#include <igl/writeOFF.h>
+
 class IglMesh
 {
 public:
@@ -19,6 +21,25 @@ public:
     std::vector<int> indices;
     void setName(std::string name){
         this->name = name;
+    }
+    void getData(std::vector<float> &vertices, std::vector<unsigned int> &indices){
+        this->vertices.clear();
+        this->indices.clear();
+        for(int i=0;i<V.rows();i++){
+            this->vertices.push_back(V(i,0));
+            this->vertices.push_back(V(i,1));
+            this->vertices.push_back(V(i,2));
+        }
+        for(int i=0;i<F.rows();i++){
+            this->indices.push_back(F(i,0));
+            this->indices.push_back(F(i,1));
+            this->indices.push_back(F(i,2));
+        }
+        vertices = this->vertices;
+        indices.clear();
+        for(int i=0;i<this->indices.size();i++){
+            indices.push_back(this->indices[i]);
+        }
     }
     void setData(std::vector<float> vertices, std::vector<int> indices){
         this->vertices = vertices;
@@ -38,7 +59,7 @@ public:
     }
     void setData(std::vector<float> vertices, std::vector<unsigned int> indices){
         this->indices.clear();
-        for(int i=0;i<indices.size();i++){
+        for(int i=0;i<(int)indices.size();i++){
             this->indices.push_back((int)indices[i]);
         }
         setData(vertices, this->indices);
@@ -51,7 +72,7 @@ public:
         vertices_.resize(V.rows()*V.cols(),0);
         Eigen::MatrixXd::Map(vertices_.data(), 3, V.rows()) = V.transpose();
         vertices.clear();
-        for(int i=0;i<vertices_.size();i++){
+        for(int i=0;i<(int)vertices_.size();i++){
             vertices.push_back(vertices_[i]);
         }
         indices.resize(F.rows()*F.cols(),0);
@@ -124,6 +145,13 @@ public:
             mesh[tar].setData(V, F);
         }
     }
+    void get(std::string name,std::vector<float> &vertices, std::vector<unsigned int> &indices){
+        int tar = searchTar(name);
+        if(tar != -1){
+            mesh[tar].getData(vertices, indices);
+        }
+    }
+
     void readFile(std::string name, char * filePath){
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
@@ -134,6 +162,14 @@ public:
         int tar = searchTar(name);
         if(tar>=0){
             igl::writeOBJ(filePath,mesh[tar].V,mesh[tar].F);
+        }else{
+
+        }
+    }
+    void writeFileOff(std::string name, char * filePath){
+        int tar = searchTar(name);
+        if(tar>=0){
+            igl::writeOFF(filePath,mesh[tar].V,mesh[tar].F);
         }else{
 
         }
@@ -195,7 +231,7 @@ public:
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             std::vector<float> vertices_new = mesh[tar[1]].vertices;
-            for(int i=0;i<vertices_new.size();i+=3){
+            for(int i=0;i<(int)vertices_new.size();i+=3){
                 vertices_new[i]*=x;
                 vertices_new[i+1]*=y;
                 vertices_new[i+2]*=z;
@@ -207,7 +243,7 @@ public:
             tar[0] = searchTar(name[0]);
             tar[1] = searchTar(name[1]);
             std::vector<float> vertices_new = mesh[tar[1]].vertices;
-            for(int i=0;i<vertices_new.size();i+=3){
+            for(int i=0;i<(int)vertices_new.size();i+=3){
                 vertices_new[i]+=x;
                 vertices_new[i+1]+=y;
                 vertices_new[i+2]+=z;

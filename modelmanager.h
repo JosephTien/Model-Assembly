@@ -56,7 +56,10 @@ public:
     std::set<Edge> edges;
     std::vector<unsigned int> connectorFaceIdxs;
     QVector3D connectorNormal_ori;
+    QVector3D connectorCenter_ori;
+    float connectorRadii;
     int connectorState = 0;
+
     /*basic management function*/
     void SetScale(float x, float y, float z);
     void normalize(float val);
@@ -66,8 +69,10 @@ public:
     void SetRotation(QVector3D from, QVector3D to);
     void rotateX(float angle);
     void rotateY(float angle);
+    void rotateTo(QVector3D vec);
     void setViewRotation(QMatrix4x4 m);
     void translate(QVector3D movement);
+    void translate_pure(QVector3D movement);
     void setRotationAxis();
     void calNeighbor();
     void calCurvures(int rings);
@@ -77,6 +82,7 @@ public:
     void Reset();
     void ResetModel();
     void ResetView();
+    void applyModelMatrix_force();
     void applyModelMatrix();
     void regenNormals();
     void fix();
@@ -94,6 +100,9 @@ public:
     QVector3D getVertice(int idx);
     QVector3D getColor(int idx);
     QVector3D getNormal(int idx);
+    void refresh_with_normalize(float scale);
+    void refresh();
+    void clearSupportData();
     std::vector<QVector3D> getSelecPointsByIdxs();
     std::vector<QVector3D> getSelecPointsByIdxs_ori();
     /*advanced calculation function*/

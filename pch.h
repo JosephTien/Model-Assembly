@@ -2,13 +2,18 @@
 #ifndef PCH_H
 #define PCH_H
 
-#ifdef _MSC_VER
-#define GLEW_STATIC
-#include "externals/include/glew/glew.h"
-#endif
+//#ifdef _MSC_VER
+//#define GLEW_STATIC
+//#include "externals/include/glew/glew.h"
+//#endif
 
 #ifdef __APPLE__
 #include <GL/glew.h>
+#include <opengl/gl.h>  //mac
+    #else
+    #define GLEW_STATIC
+    #include "externals/include/glew/glew.h"
+    #include <gl/gl.h>  //win
 #endif
 
 #include <string>
@@ -24,13 +29,14 @@
 #include <time.h>
 
 #include <list>
-#ifdef _MSC_VER
-#include <gl/gl.h>//win
-#endif
-#ifdef __APPLE__
-#include <opengl/gl.h>//mac
-#endif
 #include <math.h>
+
+//#ifdef _MSC_VER
+//#include <gl/gl.h>//win
+//#endif
+//#ifdef __APPLE__
+//#include <opengl/gl.h>//mac
+//#endif
 
 #include <QtGlobal>
 #include <QtMath>

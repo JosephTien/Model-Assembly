@@ -10,7 +10,6 @@ QMatrix4x4 ModelManager::GetScaleMatrix() {
     scaleMatrix.scale(scalex,scaley,scalez);
     return scaleMatrix;
 }
-
 void ModelManager::normalize(float val){
     float transx,transy,transz;
     float max=vertices_ori[0],min=vertices_ori[0];
@@ -52,7 +51,7 @@ void ModelManager::normalize(float val){
     SetScale(mul,mul,mul);
     transx*=mul;transy*=mul;transz*=mul;
     //translate(QVector3D(-transx,-transy,-transz));
-    printf("%f/%f/%f",-transx,-transy,-transz);std::cout<<std::endl;
+    //printf("%f/%f/%f",-transx,-transy,-transz);std::cout<<std::endl;
 }
 
 void ModelManager::genRandomColor(){
@@ -63,8 +62,11 @@ void ModelManager::genRandomColor(){
 }
 
 void ModelManager::setColors(float r,float g,float b){
-    for(int i=0;i<(int)colors.size();i+=3){
-        colors[i] = r;colors[i+1]=g;colors[i+2]=b;
+    colors.clear();
+    for(int i=0;i<(int)vertices_ori.size()/3;i++){
+        colors.push_back(r);
+        colors.push_back(g);
+        colors.push_back(b);
     }
 }
 
@@ -145,10 +147,20 @@ void ModelManager::rotateY(float angle){
     applyed = false;
     rotationMatrix.rotate(angle, rotateXAxis);
 }
+void ModelManager::rotateTo(QVector3D vec){
+    applyed = false;
+    vec.normalize();
+    rotationMatrix.rotate( qRadiansToDegrees(acos(dotProduct(QVector3D(0,0,1),vec))), QVector3D::crossProduct(QVector3D(0,0,1),vec));
+}
 
 void ModelManager::translate(QVector3D movement){
     applyed = false;
     translationMatrix.translate(movement*viewRotationMatrix);
+}
+
+void ModelManager::translate_pure(QVector3D movement){
+    applyed = false;
+    translationMatrix.translate(movement);
 }
 
 void ModelManager::setRotationAxis(){
@@ -182,6 +194,19 @@ void ModelManager::ResetModel(){
     scalex=scaley=scalez=1;
     rotateYAxis=QVector3D(0, 1, 0);
     rotateXAxis=QVector3D(1, 0, 0);
+}
+
+void ModelManager::applyModelMatrix_force(){
+    vertices.resize(vertices_ori.size());
+    QMatrix4x4 mat = GetModelMatrix();
+    for(int i=0;i<(int)vertices_ori.size();i+=3){
+        QVector4D vert = {vertices_ori[i], vertices_ori[i+1], vertices_ori[i+2], 1};
+        vert = mat * vert;
+        vertices[i] = vert.x()/vert.w();
+        vertices[i+1] = vert.y()/vert.w();
+        vertices[i+2] = vert.z()/vert.w();
+    }
+    applyed = true;
 }
 
 void ModelManager::applyModelMatrix(){
@@ -305,7 +330,36 @@ void ModelManager::fitSelecIdxs(int tar){
     }
     selecIdxs[tar] = minIdx;
 }
+void ModelManager::clearSupportData(){
+    selecIdxs.clear();
+    selecPoints.clear();
+    detourIdxs.clear();
+    curvures.clear();
+    neighbor.clear();
+}
+void ModelManager::refresh(){
+    selecIdxs.clear();
+    selecPoints.clear();
+    detourIdxs.clear();
+    curvures.clear();
+    neighbor.clear();
+    regenNormals();
+    setColors(0.5f,0.5f,0.5f);
+    applyModelMatrix_force();
+}
 
+void ModelManager::refresh_with_normalize(float scale){
+    selecIdxs.clear();
+    selecPoints.clear();
+    detourIdxs.clear();
+    curvures.clear();
+    neighbor.clear();
+    regenNormals();
+    setColors(0.5f,0.5f,0.5f);
+    normalize(scale);
+    applyModelMatrix_force();
+
+}
 void ModelManager::fix(){ // clear uncovered point
     std::vector<bool>  vertices_covered;
     vertices_covered.resize(vertices_ori.size()/3,false);

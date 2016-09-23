@@ -66,6 +66,7 @@ void ModelViewer::reBuffer(int tar){
     vector<float> colors = viewMgr->modelMgr[tar].colors;
     vector<float> empty;
     vertexAttribute[tar].BufferData(vertices, normals, empty, colors, indices);
+    update();
 }
 
 void ModelViewer::reBuffer_ass(int tar){
@@ -141,6 +142,24 @@ void ModelViewer::load(const char* filename){
     viewMgr->modelMgr[tarnum-1].regenNormals();
     viewMgr->modelMgr[tarnum-1].colors = colors;
     viewMgr->modelMgr[tarnum-1].saveColors();
+}
+void ModelViewer::reload(const char* filename,int tar){
+    makeCurrent();
+    if(tar>=tarnum)return;
+    vertexAttribute[tar].Destroy();
+    vertexAttribute[tar].Create();
+    vector<float> empty;
+    vector<float> colors;
+    loadObj(filename, positions, normals, indices);
+    viewMgr->modelMgr[tar].vertices_ori = positions;
+    viewMgr->modelMgr[tar].applyModelMatrix_force();
+    viewMgr->modelMgr[tar].indices = indices;
+    viewMgr->modelMgr[tar].regenNormals();
+    viewMgr->modelMgr[tar].setColors(0.5f,0.5f,0.5f);
+    viewMgr->modelMgr[tar].saveColors();
+
+    vertexAttribute[tar].BufferData(positions, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, indices);
+    update();
 }
 
 void ModelViewer::copyObj(int tar){

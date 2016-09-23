@@ -3,6 +3,12 @@
 
 #include <QMainWindow>
 #include <iglmachine.h>
+#include <cgaltool.h>
+
+#include<modelmanager.h>
+#include<viewmanager.h>
+#include<modelmanager.h>
+#include "ui_mainwindow.h"
 
 namespace Ui {
 class MainWindow;
@@ -53,11 +59,27 @@ private slots:
 
     void on_btnPullConnector_clicked();
 
+    void on_btnPutConnector_clicked();
+
+    void on_btnSwell_clicked();
+
+    void on_btnDig_clicked();
+
 private:
+
     Ui::MainWindow *ui;
     IglMachine iglMachine;
+    CGALTool cgaltool;
     int tarObj = 0;
     int assistPlaneIdx = 0;
+
+    bool quickmode=true;
+    int totalconnectType=2;
+    int connectType = 0;
+    bool connectPuted = false;
+    int connectTarNum = 0;
+
+    ModelManager * getModel(int tar);
 };
 
 #endif // MAINWINDOW_H

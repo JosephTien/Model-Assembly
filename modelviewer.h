@@ -34,6 +34,7 @@ public:
     StandardVertexAttribute vertexAttribute[tarlimit];
     StandardVertexAttribute vertexAttribute_ass[tarlimit];
     void load(const char* filename);
+    void reload(const char* filename, int tar);
     void load_rc(QFile * qfile);
     void setColor(int tar, float r,float g,float b);
     void setColor(int tar, std::vector<float> colors);

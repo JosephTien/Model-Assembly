@@ -38,6 +38,7 @@ void initGLEW()
  */
 int main(int argc, char *argv[])
 {
+
     /**/
     unsigned seed;
     seed = (unsigned)time(NULL);

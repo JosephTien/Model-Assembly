@@ -257,6 +257,11 @@ void ModelManager::cutByDetour_reverse(){
     //fillByDetour();
     gendetourPlane();//gendetourPlane_convex();
     connectorNormal_ori = detourNormal_ori();
+    connectorCenter_ori = detourCenter_ori();
+    connectorRadii=FLT_MAX;
+    for(int i=0;i<detourIdxs.size();i++){
+        connectorRadii = std::min(connectorRadii,(getVertice_ori(detourIdxs[i])-connectorCenter_ori).length());
+    }
     regenNormals();
     setColors(0.5f,0.5f,0.5f);
     applyed=false;applyModelMatrix();
@@ -315,16 +320,15 @@ void ModelManager::cutByDetour(){
     curvures.clear();
     sortDetour();
     //fillByDetour();
-
-//    std::vector<int> detourIdxs_temp = detourIdxs;
-//    detourIdxs.clear();
-//    for(int i=0;i<detourIdxs_temp.size()/2;i++){
-//        detourIdxs.push_back(detourIdxs_temp[i]);
-//    }
-    gendetourPlane();//gendetourPlane_convex();//gendetourPlane_patch();//gendetourPlane();
-
+    //gendetourPlane();//gendetourPlane_convex();//gendetourPlane_patch();
+    //regenNormals();
     connectorNormal_ori = detourNormal_ori();
-    regenNormals();
+    connectorCenter_ori = detourCenter_ori();
+    connectorRadii=FLT_MAX;
+    for(int i=0;i<detourIdxs.size();i++){
+        connectorRadii = std::min(connectorRadii,(getVertice_ori(detourIdxs[i])-connectorCenter_ori).length());
+    }
+
     setColors(0.5f,0.5f,0.5f);
     applyed=false;applyModelMatrix();
 }
