@@ -74,12 +74,15 @@ private:
     int assistPlaneIdx = 0;
 
     bool quickmode=true;
+    float normalizeVal = 100.0f;
     int totalconnectType=2;
     int connectType = 0;
     bool connectPuted = false;
     int connectTarNum = 0;
 
     ModelManager * getModel(int tar);
+    void putStdModel(char * name, QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate);
+    void applyCSG(char c,int er, int ee);
 };
 
 #endif // MAINWINDOW_H

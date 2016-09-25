@@ -15,21 +15,6 @@ MainWindow::~MainWindow()
 {
     delete ui;
 }
-//void testMatrix(){
-//    QVector3D a(0,1.0f,0);
-//    QVector3D b(0,0,0);
-//    QVector3D c(1.0f,0,0);
-//    QVector3D n1(1.0f,0,0);
-//    QVector3D n2(0,1.0f,0);
-//    QVector3D c1 = (a+b)/2;
-//    QVector3D c2 = (b+c)/2;
-//    float fillor[6];
-//    fillor[0] =  n2.x();fillor[1] =  n2.y();fillor[2] =  n2.z();
-//    fillor[3] = -n1.x();fillor[4] = -n1.y();fillor[5] = -n1.z();
-//    QMatrix3x2 M(fillor);
-//    QVector3D heart = n2*((c1-c2)/M).x()+c2;
-//    printf("%f/%f/%f/",heart.x().heart.y(),heart.z());print("");
-//}
 void MainWindow::on_btnLoad_clicked()
 {
     if(quickmode){
@@ -158,7 +143,7 @@ void MainWindow::on_selection_stateChanged(int arg1)
 void MainWindow::on_btnNormalize_clicked()
 {
     if(ui->glMain->getTarnum()<1)return;
-    getModel(tarObj)->normalize(100.0f);
+    getModel(tarObj)->normalize(normalizeVal);
     getModel(tarObj)->applyModelMatrix();
     ui->glMain->reBuffer(0);
     this->setFocus();
@@ -197,8 +182,6 @@ void MainWindow::on_btnDetour_clicked()//tune framework
     if(flag==1){
         getModel(tarObj)->paintDetour();
     }else{
-        //getModel(tarObj)->selecIdxs.clear();
-        //getModel(tarObj)->selecPoints.clear();
         ui->glMain->deleteTar_ass(assistPlaneIdx);
     }
     getModel(tarObj)->connectorFaceIdxs.clear();
@@ -214,9 +197,8 @@ void MainWindow::on_btnReset_clicked()
 {
 
     for(int i=ui->glMain->getTarnum()-1;i>tarObj;i++)ui->glMain->deleteTar(i);
-    getModel(tarObj)->selecIdxs.clear();
-    getModel(tarObj)->selecPoints.clear();
     getModel(tarObj)->setColors(0.5f,0.5f,0.5f);
+    getModel(tarObj)->refresh();
     getModel(tarObj)->ResetModel();
     ui->glMain->reBuffer(tarObj);
 }
@@ -236,19 +218,20 @@ void MainWindow::on_showPlate_stateChanged(int arg1)
 
 void MainWindow::on_btnCut_clicked()
 {
+    if(getModel(tarObj)->selecIdxs.size()==0)return;
     char str[20];
     int tarnum = ui->glMain->getTarnum();
     ui->glMain->copyObj(tarObj);
-    if(getModel(tarObj)->selecIdxs.size()==0)return;
 
-    getModel(tarObj)->cutByDetour();
+    getModel(tarObj)->cutByDetour(1);
     cgaltool.fillHole(getModel(tarObj)->vertices_ori, getModel(tarObj)->indices);
     ui->glMain->reload("./temp.obj",tarObj);
-
     getModel(tarObj)->refresh();
     ui->glMain->reBuffer(tarObj);
 
-    getModel(tarnum)->cutByDetour_reverse();
+    getModel(tarnum)->cutByDetour(-1);
+    cgaltool.fillHole(getModel(tarnum)->vertices_ori, getModel(tarnum)->indices);
+    ui->glMain->reload("./temp.obj",tarnum);
     getModel(tarnum)->refresh();
     ui->glMain->reBuffer(tarnum);
 
@@ -295,36 +278,16 @@ void MainWindow::on_btnPutConnector_clicked()
         ui->glMain->deleteTar(ui->glMain->getTarnum()-1);
     }
     float s = getModel(tarObj)->GetScaleXYZ().x();
-    float r = getModel(tarObj)->connectorRadii * s * 1.8;
+    float r = getModel(tarObj)->connectorRadii_ori * s * 1.8;
     QVector3D c = getModel(tarObj)->connectorCenter_ori*s;
     QVector3D n = getModel(tarObj)->connectorNormal_ori;
     if(connectType == 0){
-        //QFile stdObjFile(":/object/cylinder10X10_dense.obj");
-        QFile stdObjFile(":/object/cylinder10X10.obj");
-        ui->glMain->load_rc(&stdObjFile);
-        connectTarNum = ui->glMain->getTarnum()-1;
-        ui->glMain->setColor(connectTarNum,1.0f,0.5f,0.5f);
-        getModel(connectTarNum)->ResetModel();
-        getModel(connectTarNum)->SetScale(r/100,r/100,0.1);
-        getModel(connectTarNum)->translate_pure(c);
-        getModel(connectTarNum)->rotateTo(n);
-        ui->glMain->setVis(connectTarNum,1);
+        putStdModel("cylinder10X10",QVector3D(1.0f,0.5f,0.5f),QVector3D(r/100,r/100,0.1f),c,n);
 
     }else if(connectType == 1){
-        //QFile stdObjFile(":/object/cube10X10_dense.obj");
-        QFile stdObjFile(":/object/cube10X10.obj");
-        ui->glMain->load_rc(&stdObjFile);
-        connectTarNum = ui->glMain->getTarnum()-1;
-        ui->glMain->setColor(connectTarNum,1.0f,0.5f,0.5f);
-        getModel(connectTarNum)->ResetModel();
         r/=1.41421;
-        getModel(connectTarNum)->SetScale(r/100,r/100,0.05);
-        getModel(connectTarNum)->rotateTo(n);
-        getModel(connectTarNum)->translate_pure(c);
-        ui->glMain->setVis(connectTarNum,1);
+        putStdModel("cube10X10",QVector3D(1.0f,0.5f,0.5f),QVector3D(r/100,r/100,0.1f),c,n);
     }
-    getModel(connectTarNum)->applyModelMatrix_force();
-    ui->glMain->reBuffer(connectTarNum);
     connectType= (connectType+1)%totalconnectType;
     connectPuted = true;
 }
@@ -332,14 +295,7 @@ void MainWindow::on_btnPutConnector_clicked()
 void MainWindow::on_btnSwell_clicked()
 {
     if(!connectPuted)return;
-    iglMachine.reset();
-    iglMachine.put("mainobj", getModel(tarObj)->vertices, getModel(tarObj)->indices);
-    iglMachine.put("conn", getModel(connectTarNum)->vertices, getModel(connectTarNum)->indices);
-    iglMachine.command("NEW outcome");
-    iglMachine.command("+ outcome mainobj conn");
-    iglMachine.get("outcome",ui->glMain->viewMgr->modelMgr[tarObj].vertices_ori, ui->glMain->viewMgr->modelMgr[tarObj].indices);
-    getModel(tarObj)->refresh_with_normalize(100.0f);
-    ui->glMain->reBuffer(tarObj);
+    applyCSG('+',tarObj,connectTarNum);
     connectPuted=false;
     ui->glMain->deleteTar(connectTarNum);
 }
@@ -347,14 +303,7 @@ void MainWindow::on_btnSwell_clicked()
 void MainWindow::on_btnDig_clicked()
 {
     if(!connectPuted)return;
-    iglMachine.reset();
-    iglMachine.put("mainobj", getModel(tarObj)->vertices, getModel(tarObj)->indices);
-    iglMachine.put("conn", getModel(connectTarNum)->vertices, getModel(connectTarNum)->indices);
-    iglMachine.command("NEW outcome");
-    iglMachine.command("- outcome mainobj conn");\
-    iglMachine.get("outcome",getModel(tarObj)->vertices_ori, getModel(tarObj)->indices);
-    getModel(tarObj)->refresh_with_normalize(100.0f);
-    ui->glMain->reBuffer(tarObj);
+    applyCSG('-',tarObj,connectTarNum);
     connectPuted=false;
     ui->glMain->deleteTar(connectTarNum);
 }

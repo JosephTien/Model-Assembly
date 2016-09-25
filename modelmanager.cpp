@@ -52,6 +52,7 @@ void ModelManager::normalize(float val){
     transx*=mul;transy*=mul;transz*=mul;
     //translate(QVector3D(-transx,-transy,-transz));
     //printf("%f/%f/%f",-transx,-transy,-transz);std::cout<<std::endl;
+    applyed=false;applyModelMatrix();
 }
 
 void ModelManager::genRandomColor(){
@@ -283,7 +284,7 @@ QVector3D ModelManager::getColor(int idx){
 
 }
 
-QVector3D ModelManager::getNormal(int idx){
+QVector3D ModelManager::getNormal_ori(int idx){
     return QVector3D(normals[idx*3],normals[idx*3+1],normals[idx*3+2]);
 
 }
