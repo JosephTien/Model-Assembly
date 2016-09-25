@@ -19,7 +19,13 @@ SOURCES += main.cpp\
         modelviewer.cpp\
         standarshader.cpp\
         objLoader.cpp \
-        modelutility.cpp
+        cgalholefiller.cpp \
+        cgalremesher.cpp \
+        #cgalmachine.cpp
+        mainwindow_support.cpp \
+        modelmanager_support.cpp \
+        modelmanager_utility.cpp \
+        #modelmanager_utility_unusedcodebackup.cpp
 
 HEADERS  += mainwindow.h \
         pch.h\
@@ -29,11 +35,16 @@ HEADERS  += mainwindow.h \
         standarshader.h\
         iglmachine.h \
         tiny_obj_loader.h \
-    looplist.h
+        looplist.h \
+        cgaltool.h \
+        pch_cgal.h \
+        cgalutility.h \
+        #cgalmachine.h
 
-PRECOMPILED_HEADER = pch.h
+PRECOMPILED_HEADER = pch.h #pch_cgal.h
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_RELEASE -= -O2
+#QMAKE_CXXFLAGS += -bigobj
 
 FORMS    += mainwindow.ui
 
@@ -52,14 +63,20 @@ win32 {
     INCLUDEPATH += $$PWD/externals/include/mpfr/
     LIBS += -lopengl32
     LIBS += $$PWD/externals/lib/x64/glew32s.lib
-    LIBS += $$PWD/externals/lib/x64/tinyobjloader_debug.lib
-    LIBS += $$PWD/externals/lib/x64/libboost_thread-vc120-mt-1_61.lib
-    LIBS += $$PWD/externals/lib/x64/libboost_system-vc120-mt-1_61.lib
-    LIBS += $$PWD/externals/lib/x64/CGAL-vc120-mt-4.8.1.lib
-    #LIBS += $$PWD/externals/lib/x64/mpfr.lib
-    #LIBS += $$PWD/externals/lib/x64/gmp.lib
     #LIBS += $$PWD/externals/lib/x64/glew32.lib
-    #LIBS += $$PWD/externals/lib/x64/tinyobjloader.lib
+    LIBS += $$PWD/externals/lib/x64/tinyobjloader_140.lib
+    #LIBS += $$PWD/externals/lib/x64/tinyobjloader_140_db.lib
+
+    LIBS += $$PWD/externals/lib/x64/libboost_thread-vc140-mt-1_61.lib
+    LIBS += $$PWD/externals/lib/x64/libboost_system-vc140-mt-1_61.lib
+    LIBS += $$PWD/externals/lib/x64/CGAL-vc140-mt-4.8.1.lib
+    #LIBS += $$PWD/externals/lib/x64/CGAL-vc140-mt-gd-4.8.1.lib
+
+    LIBS += $$PWD/externals/lib/x64/mpir.lib # replace gmp for x64?
+    #LIBS += $$PWD/externals/lib/x64/mpir_db.lib # replace gmp for x64?
+    #LIBS += $$PWD/externals/lib/x64/gmp.lib
+    LIBS += $$PWD/externals/lib/x64/mpfr.lib
+
 
     QMAKE_LFLAGS_DEBUG = /NODEFAULTLIB:libcmt.lib
     QMAKE_LFLAGS_RELEASE = /NODEFAULTLIB:libcmt.lib
