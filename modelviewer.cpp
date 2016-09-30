@@ -25,6 +25,7 @@ void ModelViewer::deleteTar(int tar){
         vertexAttribute[i] = vertexAttribute[i+1];
         vis[i]=vis[i+1];
     }
+    update();
 }
 void ModelViewer::deleteTar_ass(int tar){
     makeCurrent();
@@ -114,12 +115,34 @@ void ModelViewer::load_rc(QFile * qfile){
 //    std::cout<<"face num : " << indices.size()/3 << std::endl;
     vertexAttribute[tarnum-1].BufferData(positions, normals, empty, colors, indices);
     update();
+    viewMgr->modelMgr[tarnum-1].Reset();
     viewMgr->modelMgr[tarnum-1].vertices = positions;
     viewMgr->modelMgr[tarnum-1].colors = colors;
     viewMgr->modelMgr[tarnum-1].vertices_ori = positions;
     viewMgr->modelMgr[tarnum-1].normals = normals;
     viewMgr->modelMgr[tarnum-1].indices = indices;
     viewMgr->modelMgr[tarnum-1].saveColors();
+
+}
+
+void ModelViewer::load_rc_ass(QFile * qfile){
+    makeCurrent();
+    vertexAttribute_ass[tarnum++].Create();
+    vector<float> empty;
+    vector<float> colors;
+    loadObj_rc(qfile, positions, normals, indices);
+    for(int i=0;i<(int)positions.size();i+=3){colors.push_back(0.5f);colors.push_back(0.5f);colors.push_back(0.5f);}
+//    std::cout<<"load     : " << filename << std::endl;
+//    std::cout<<"face num : " << indices.size()/3 << std::endl;
+    vertexAttribute_ass[tarnum_ass-1].BufferData(positions, normals, empty, colors, indices);
+    update();
+    viewMgr->modelMgr_ass[tarnum_ass-1].Reset();
+    viewMgr->modelMgr_ass[tarnum_ass-1].vertices = positions;
+    viewMgr->modelMgr_ass[tarnum_ass-1].colors = colors;
+    viewMgr->modelMgr_ass[tarnum_ass-1].vertices_ori = positions;
+    viewMgr->modelMgr_ass[tarnum_ass-1].normals = normals;
+    viewMgr->modelMgr_ass[tarnum_ass-1].indices = indices;
+    viewMgr->modelMgr_ass[tarnum_ass-1].saveColors();
 
 }
 
@@ -232,6 +255,12 @@ void ModelViewer::generateAssitDisc(int tarObj, QVector3D &c, float &r){
         r = radii;
     }
 }
+void ModelViewer::generateAssitDisc(QVector3D center, QVector3D platnorm, float radii){
+    int tarIdx_ass=0;
+    while(tarnum_ass<=tarIdx_ass)tarnum_ass++;
+    generateDisc(center,platnorm,radii,tarIdx_ass);
+    setVis_ass(tarIdx_ass, assistMode);
+}
 void ModelViewer::generateAssitDisc(int tarObj){
     int tarIdx_ass=0;
     while(tarnum_ass<=tarIdx_ass)tarnum_ass++;
@@ -274,6 +303,7 @@ void ModelViewer::generateDisc(QVector3D center, QVector3D platenorm, float radi
     setVis_ass(tarIdx_ass,1);
     //vertexAttribute[curtar].Color3f(0.5f, 1.0f, 0.5f);
     update();
+    viewMgr->modelMgr_ass[tarIdx_ass].Reset();
     viewMgr->modelMgr_ass[tarIdx_ass].vertices = positions;
     viewMgr->modelMgr_ass[tarIdx_ass].indices = indices;
     viewMgr->modelMgr_ass[tarIdx_ass].vertices_ori = positions;

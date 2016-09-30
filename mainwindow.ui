@@ -79,6 +79,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="btnDrawCir">
+         <property name="text">
+          <string>Fill</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="edition">
          <property name="text">
           <string>Edition</string>
@@ -100,10 +107,27 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="showSkel">
+         <property name="text">
+          <string>Show Skel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QComboBox" name="cmbbSelection"/>
        </item>
        <item>
         <widget class="QComboBox" name="cmbbObject"/>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="edgeNum">
+         <property name="minimum">
+          <number>3</number>
+         </property>
+         <property name="maximum">
+          <number>16</number>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>
@@ -114,7 +138,7 @@
      <rect>
       <x>920</x>
       <y>9</y>
-      <width>108</width>
+      <width>113</width>
       <height>601</height>
      </rect>
     </property>
@@ -162,9 +186,16 @@
       </widget>
      </item>
      <item>
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+      <widget class="QPushButton" name="btnLoadSkel">
+       <property name="text">
+        <string>Load Skel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btnCutSkel">
+       <property name="text">
+        <string>Cut Skel</string>
        </property>
       </widget>
      </item>

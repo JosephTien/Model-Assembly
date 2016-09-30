@@ -71,5 +71,7 @@
 #include <QGridLayout>
 #include <QWidget>
 #include <QMessageBox>
+#include <QTimer>
+#include <QObject>
 
 #endif // PCH_H

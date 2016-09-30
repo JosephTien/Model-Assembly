@@ -94,10 +94,12 @@ void CGALTool::fillHole(std::vector<float> &coords, std::vector<unsigned int> &t
         //std::cout << std::endl;
     }
     */
-    std::ofstream ofs;
-    ofs.open("temp.obj");
-    CGAL::print_polyhedron_wavefront(ofs, poly);
-    //std::ofstream out("temp.off");
-    //out.precision(17);
-    //out << poly << std::endl;
+
+//    std::ofstream ofs;
+//    ofs.open("temp.obj");
+//    CGAL::print_polyhedron_wavefront(ofs, poly);
+
+    std::ofstream out("temp.off");
+    out.precision(17);
+    out << poly << std::endl;
 }

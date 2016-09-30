@@ -185,6 +185,10 @@ void ModelManager::Reset(){
     selecIdxs.clear();
     selecPoints.clear();
     edges.clear();
+    connectorFaceIdxs.clear();
+    connectorReady = false;
+    connectorFaceReady = false;
+    refresh();
 }
 
 void ModelManager::ResetModel(){
@@ -225,8 +229,8 @@ void ModelManager::applyModelMatrix(){
 }
 
 void ModelManager::regenNormals(){
-    std::vector<QVector3D>verts;
-    std::vector<QVector3D>norms;
+    vecq3d verts;
+    vecq3d norms;
     for(int i=0;i<(int)vertices_ori.size();i+=3){
         verts.push_back(QVector3D(vertices_ori[i],vertices_ori[i+1],vertices_ori[i+2]));
     }
@@ -251,6 +255,12 @@ void ModelManager::regenNormals(){
         normals.push_back(norms[i].z());
     }
 }
+void ModelManager::putColor(unsigned int idx,QVector3D c){
+    colors[idx*3]=c.x();
+    colors[idx*3+1]=c.y();
+    colors[idx*3+2]=c.z();
+}
+
 void ModelManager::putVertice_ori(unsigned int idx,QVector3D v){
     vertices_ori[idx*3]=v.x();
     vertices_ori[idx*3+1]=v.y();
@@ -273,6 +283,15 @@ QVector3D ModelManager::getVertice_ori(int idx){
     return QVector3D(vertices_ori[idx*3],vertices_ori[idx*3+1],vertices_ori[idx*3+2]);
 
 }
+vecq3d ModelManager::getIndicesVertice_ori(int idx){
+    vecq3d o;
+    o.push_back(getVertice_ori(indices[idx*3]));
+    o.push_back(getVertice_ori(indices[idx*3+1]));
+    o.push_back(getVertice_ori(indices[idx*3+2]));
+    return o;
+
+}
+
 
 QVector3D ModelManager::getVertice(int idx){
     return QVector3D(vertices[idx*3],vertices[idx*3+1],vertices[idx*3+2]);
@@ -288,15 +307,15 @@ QVector3D ModelManager::getNormal_ori(int idx){
     return QVector3D(normals[idx*3],normals[idx*3+1],normals[idx*3+2]);
 
 }
-std::vector<QVector3D> ModelManager::getSelecPointsByIdxs_ori(){
-    std::vector<QVector3D> sp;
+vecq3d ModelManager::getSelecPointsByIdxs_ori(){
+    vecq3d sp;
     for(int i=0;i<(int)selecIdxs.size();i++){
         sp.push_back(getVertice_ori(selecIdxs[i]));
     }
     return sp;
 }
-std::vector<QVector3D> ModelManager::getSelecPointsByIdxs(){
-    std::vector<QVector3D> sp;
+vecq3d ModelManager::getSelecPointsByIdxs(){
+    vecq3d sp;
     for(int i=0;i<(int)selecIdxs.size();i++){
         sp.push_back(getVertice(selecIdxs[i]));
     }

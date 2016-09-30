@@ -26,6 +26,7 @@ SOURCES += main.cpp\
         modelmanager_support.cpp \
         modelmanager_utility.cpp \
         #modelmanager_utility_unusedcodebackup.cpp
+    maintainthread.cpp
 
 HEADERS  += mainwindow.h \
         pch.h\
@@ -40,6 +41,10 @@ HEADERS  += mainwindow.h \
         pch_cgal.h \
         cgalutility.h \
         #cgalmachine.h
+        skelmanager.h \
+        maintainthread.h \
+        maintainvar.h \
+        mainwindow_support.h
 
 PRECOMPILED_HEADER = pch.h #pch_cgal.h
 QMAKE_CXXFLAGS_DEBUG -= -g

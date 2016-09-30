@@ -2,13 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <iglmachine.h>
-#include <cgaltool.h>
-
-#include<modelmanager.h>
-#include<viewmanager.h>
-#include<modelmanager.h>
-#include "ui_mainwindow.h"
+#include <maintainthread.h>
+#include <maintainvar.h>
+#include <mainwindow_support.h>
 
 namespace Ui {
 class MainWindow;
@@ -65,24 +61,23 @@ private slots:
 
     void on_btnDig_clicked();
 
+    void on_btnDrawCir_clicked();
+
+    void on_btnLoadSkel_clicked();
+
+    void on_btnCutSkel_clicked();
+
+    void on_showSkel_stateChanged(int arg1);
+
+    void on_edgeNum_valueChanged(int arg1);
+
 private:
 
     Ui::MainWindow *ui;
-    IglMachine iglMachine;
-    CGALTool cgaltool;
-    int tarObj = 0;
-    int assistPlaneIdx = 0;
+    MaintainVar var;
+    MainWindow_support support;
+    MaintainThread maintainthread;
 
-    bool quickmode=true;
-    float normalizeVal = 100.0f;
-    int totalconnectType=2;
-    int connectType = 0;
-    bool connectPuted = false;
-    int connectTarNum = 0;
-
-    ModelManager * getModel(int tar);
-    void putStdModel(char * name, QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate);
-    void applyCSG(char c,int er, int ee);
 };
 
 #endif // MAINWINDOW_H

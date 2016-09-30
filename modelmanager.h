@@ -4,6 +4,8 @@
 #include "looplist.h"
 #define minThre ((float)(1.0e-5))
 
+typedef std::vector<QVector3D> vecq3d;
+
 class Edge{
 public:
     Edge(unsigned int ia, unsigned int ib){
@@ -103,16 +105,20 @@ public:
     std::vector<float> curvures;
     std::vector<std::vector<unsigned int>> neighbor;
     std::vector<unsigned int> indices;
-    std::vector<QVector3D> selecPoints;
+    vecq3d selecPoints;
     std::vector<int> selecIdxs;
     std::vector<int> detourIdxs;
     std::vector<int> detourIdxs_all;//include vertices inside
     std::set<Edge> edges;
     std::vector<unsigned int> connectorFaceIdxs;
+    std::vector<unsigned int> connectorFaceIdxs_sup;
+    bool connectorReady = false;
+    bool connectorFaceReady = false;
     QVector3D connectorNormal_ori;
     QVector3D connectorCenter_ori;
     float connectorRadii_ori;
     Plane cuttingPlane;
+    bool connectReverse = false;
     int detourSPIdx;//start point
     int detourCPIdx;//center point
     /*basic management function*/
@@ -148,9 +154,11 @@ public:
     void paintDetour();
     unsigned int pushVertice_ori(QVector3D v);
     void putVertice_ori(unsigned int idx,QVector3D v);
+    void putColor(unsigned int idx,QVector3D c);
     void pushColor(QVector3D c);
     void pushNormal(QVector3D n);
     void pushIndice(unsigned int a, unsigned int b, unsigned int c);
+    vecq3d getIndicesVertice_ori(int idx);
     QVector3D getVertice_ori(int idx);
     QVector3D getVertice(int idx);
     QVector3D getColor(int idx);
@@ -158,19 +166,24 @@ public:
     void refresh_with_normalize(float scale);
     void refresh();
     void clearSupportData();
-    std::vector<QVector3D> getSelecPointsByIdxs();
-    std::vector<QVector3D> getSelecPointsByIdxs_ori();
+    vecq3d getSelecPointsByIdxs();
+    vecq3d getSelecPointsByIdxs_ori();
+    void clearConnector();
     /*advanced calculation function*/
     std::vector<int> nRingNeighbor(int root, int rings);
     void fitAllSelecIdxs();
     void fitSelecIdxs(int tar);
-    int calDetourByPlane(float radii);
+    int calDetourByPlane();
+    int calDetourByPlane(QVector3D c,QVector3D n);
     void cutByDetour(int state);
     void fillByDetour();
     void regenByPlateIntersec();
     bool checkDetour();
-    void pullConnect();
-    void pushConnect();
+    void pullConnect(float val);
+    void pushConnect(float val);
+    void circleOnPlane(QVector3D c, QVector3D n, float radii, int div);
+    void linkContour(Plane mainPlane, std::vector<int> contourIdx);
+    std::vector<int> bfs(std::vector<bool> &visited, int rootIdx);
     /*data support*/
     QVector3D detourNormal();
     QVector3D selecPointsNormal();
@@ -208,6 +221,6 @@ private:
     std::vector<std::vector<int>> detourIdxsQueue;
     int detourIdxsQueue_flag = 0;
     std::vector<std::vector<int>> detourIdxsList;
-    std::vector<QVector3D> detourCenterList;
+    vecq3d detourCenterList;
 };
 #endif // MODELMANAGER_H

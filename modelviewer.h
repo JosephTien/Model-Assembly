@@ -20,7 +20,7 @@ class Ray3{
 class ModelViewer : public QOpenGLWidget
 {
 private:
-    static const int tarlimit = 10;
+    static const int tarlimit = 50;
     int tarnum = 0;
     int tarnum_ass = 0;
     int curtar = 0;
@@ -36,6 +36,7 @@ public:
     void load(const char* filename);
     void reload(const char* filename, int tar);
     void load_rc(QFile * qfile);
+    void load_rc_ass(QFile * qfile);
     void setColor(int tar, float r,float g,float b);
     void setColor(int tar, std::vector<float> colors);
     void reBuffer(int tar);
@@ -59,6 +60,7 @@ public:
     void generateDisc(QVector3D center, QVector3D platenorm, float radii, int tarIdx_ass);
     void generateAssitDisc(int tarObj);
     void generateAssitDisc(int tarObj, QVector3D &c, float &r);
+    void generateAssitDisc(QVector3D center, QVector3D platnorm, float radii);
     int getPlaneParaBySelec(int tarObj, QVector3D &c, float &r);
     int curSelecTar = 0;
     int assistMode = 0;

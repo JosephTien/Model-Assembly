@@ -3,7 +3,7 @@
 
 QVector3D ModelManager::detourNormal(){
     QVector3D c(0,0,0);
-    std::vector<QVector3D> detourPoints;
+    vecq3d detourPoints;
     for(int i=0;i<(int)detourIdxs.size();i++){
         detourPoints.push_back(getVertice(detourIdxs[i]));
         c += detourPoints[i];
@@ -17,7 +17,7 @@ QVector3D ModelManager::detourNormal(){
 }
 
 QVector3D ModelManager::selecPointsNormal(){
-    std::vector<QVector3D> s = getSelecPointsByIdxs();
+    vecq3d s = getSelecPointsByIdxs();
     QVector3D c = (s[0]+s[1]+s[2])/3;
     QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
     return n;
@@ -25,7 +25,7 @@ QVector3D ModelManager::selecPointsNormal(){
 
 QVector3D ModelManager::detourNormal_ori(std::vector<int> detourIdxs_this){
     QVector3D c(0,0,0);
-    std::vector<QVector3D> detourPoints;
+    vecq3d detourPoints;
     for(int i=0;i<(int)detourIdxs_this.size();i++){
         detourPoints.push_back(getVertice_ori(detourIdxs_this[i]));
         c += detourPoints[i];
@@ -40,7 +40,7 @@ QVector3D ModelManager::detourNormal_ori(std::vector<int> detourIdxs_this){
 
 QVector3D ModelManager::detourNormal_ori(){
     QVector3D c(0,0,0);
-    std::vector<QVector3D> detourPoints;
+    vecq3d detourPoints;
     for(int i=0;i<(int)detourIdxs.size();i++){
         detourPoints.push_back(getVertice_ori(detourIdxs[i]));
         c += detourPoints[i];
@@ -54,7 +54,7 @@ QVector3D ModelManager::detourNormal_ori(){
 }
 
 QVector3D ModelManager::selecPointsNormal_ori(){
-    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
+    vecq3d s = getSelecPointsByIdxs_ori();
     QVector3D c = (s[0]+s[1]+s[2])/3;
     QVector3D n = QVector3D::crossProduct(s[0]-c,s[1]-c);
     return n;
@@ -68,11 +68,11 @@ void ModelManager::reverseDetours(){
     }
 }
 QVector3D ModelManager::selecPointsCenter(){
-    std::vector<QVector3D> s = getSelecPointsByIdxs();
+    vecq3d s = getSelecPointsByIdxs();
     return (s[0]+s[1]+s[2])/3;
 }
 QVector3D ModelManager::selecPointsCenter_ori(){
-    std::vector<QVector3D> s = getSelecPointsByIdxs_ori();
+    vecq3d s = getSelecPointsByIdxs_ori();
     return (s[0]+s[1]+s[2])/3;
 }
 QVector3D ModelManager::detourCenter(){
@@ -123,4 +123,30 @@ bool ModelManager::isCrossPlane(QVector3D v1, QVector3D v2, QVector3D s1, QVecto
         return true;
     }
     return false;
+}
+void ModelManager::clearConnector(){
+    if(connectorFaceIdxs.size()>0){
+        std::vector<bool> exist;
+        exist.resize(vertices_ori.size()/3,true);
+        for(int i=0;i<connectorFaceIdxs.size();i++){
+            exist[connectorFaceIdxs[i]]=false;
+        }
+        for(int i=0;i<connectorFaceIdxs_sup.size();i++){
+            exist[connectorFaceIdxs_sup[i]]=false;
+        }
+        std::vector<unsigned int> indices_new;
+        for(int i=0;i<indices.size();i+=3){
+            if(exist[indices[i]]&&exist[indices[i+1]]&&exist[indices[i+2]]){
+                indices_new.push_back(indices[i]);
+                indices_new.push_back(indices[i+1]);
+                indices_new.push_back(indices[i+2]);
+            }
+        }
+        indices=indices_new;
+        fix();
+        connectorFaceIdxs.clear();
+        connectorFaceIdxs_sup.clear();
+        connectorFaceReady=false;
+        applyed=false;applyModelMatrix();
+    }
 }

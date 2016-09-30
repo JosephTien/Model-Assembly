@@ -42,7 +42,7 @@ private:
     QVector2D lmbDownCoord;
     QVector2D midDownCoord;
 
-    static const int objnum = 10;
+    static const int objnum = 50;
     int controlTar = -1;
     int controlType = 0;
 public:
