@@ -181,14 +181,28 @@ void ModelManager::ResetView(){
 void ModelManager::Reset(){
     ResetView();
     ResetModel();
-    detourIdxs.clear();
-    selecIdxs.clear();
-    selecPoints.clear();
-    edges.clear();
+    clearSupportData();
+    ResetConnector();
+    ResetMainData();
+}
+void ModelManager::ResetMainData(){
+    normals.clear();
+    vertices.clear();
+    vertices_ori.clear();
+    colors_ori.clear();
+    colors.clear();
+    indices.clear();
+}
+void ModelManager::ResetConnector(){
     connectorFaceIdxs.clear();
+    connectorFaceIdxs_sup.clear();
     connectorReady = false;
     connectorFaceReady = false;
-    refresh();
+    connectReverse = false;
+//    connectorNormal_ori;
+//    connectorCenter_ori;
+//    connectorRadii_ori;
+//    cuttingPlane.exist=false;
 }
 
 void ModelManager::ResetModel(){
@@ -245,6 +259,7 @@ void ModelManager::regenNormals(){
         norms[ib] += normal;
         norms[ic] += normal;
     }
+
     for (int i = 0; i<(int) norms.size(); i++){
         norms[i].normalize();
     }
@@ -253,6 +268,15 @@ void ModelManager::regenNormals(){
         normals.push_back(norms[i].x());
         normals.push_back(norms[i].y());
         normals.push_back(norms[i].z());
+    }
+}
+
+void ModelManager::scaleDepend_ori(QVector3D c, float valx, float valy, float valz){//scale vertices_ori depend on a certain point
+    for(int i=0;i<vertices_ori.size()/3;i++){
+        QVector3D v = (getVertice_ori(i)-c);
+        v = QVector3D(v.x()*valx,v.y()*valy,v.z()*valz);
+        v+=c;
+        putVertice_ori(i,v);
     }
 }
 void ModelManager::putColor(unsigned int idx,QVector3D c){
@@ -292,6 +316,27 @@ vecq3d ModelManager::getIndicesVertice_ori(int idx){
 
 }
 
+QVector3D ModelManager::getCenter_ori(){
+    QVector3D c(0,0,0);
+    for(int i=0;i<vertices_ori.size()/3;i++){
+        c+=getVertice_ori(i);
+    }
+    c/=vertices_ori.size()/3;
+    return c;
+}
+
+QVector3D ModelManager::getMassCenter_ori(){
+    QVector3D c(0,0,0);
+    float sum=0;
+    for(int i=0;i<indices.size()/3;i++){
+        vecq3d s=getIndicesVertice_ori(i);
+        float area = QVector3D::crossProduct(s[1]-s[0],s[2]-s[0]).length();
+        c += area * (s[0]+s[1]+s[2])/3;
+        sum+=area;
+    }
+    c/=sum;
+    return c;
+}
 
 QVector3D ModelManager::getVertice(int idx){
     return QVector3D(vertices[idx*3],vertices[idx*3+1],vertices[idx*3+2]);
@@ -354,15 +399,14 @@ void ModelManager::clearSupportData(){
     selecIdxs.clear();
     selecPoints.clear();
     detourIdxs.clear();
+    detourIdxs_all.clear();
+    edges.clear();
     curvures.clear();
     neighbor.clear();
 }
 void ModelManager::refresh(){
-    selecIdxs.clear();
-    selecPoints.clear();
-    detourIdxs.clear();
-    curvures.clear();
-    neighbor.clear();
+    clearSupportData();
+    //ResetConnector();
     regenNormals();
     setColors(0.5f,0.5f,0.5f);
     applyModelMatrix_force();
@@ -426,7 +470,7 @@ void ModelManager::fix(){ // clear uncovered point
         normals.push_back(normals_new[i]);
         colors.push_back(colors_new[i]);
     }
-    applyModelMatrix();
+    applyed=false;applyModelMatrix();
     neighbor.clear();
 }
 //maintainable mesh

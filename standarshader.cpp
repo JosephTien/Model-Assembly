@@ -61,8 +61,10 @@ void StandardVertexAttribute::Destroy()
 {
     if(vao != 0)
     {
-        glDeleteVertexArrays(1, &vao);
+        glBindVertexArray(vao);
         glDeleteBuffers(5, buffers);
+        glBindVertexArray(0);
+        glDeleteVertexArrays(1, &vao);
     }
 }
 

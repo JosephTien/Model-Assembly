@@ -66,6 +66,7 @@ public:
     int assistMode = 0;
     int tarObj=0;
     void copyObj(int tar);
+    void generateCube(QVector3D pup,QVector3D plow);
 
 protected:
 
@@ -98,7 +99,9 @@ protected:
 
     std::vector<float> positions;
     std::vector<float> normals;
+    std::vector<float> colors;
     std::vector<unsigned int> indices;
+    std::vector<float> empty;
     int winw = 804;
     int winh = 599;
 };

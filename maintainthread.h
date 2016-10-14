@@ -16,6 +16,7 @@ public:
     void setupVar(MaintainVar * var);
 public slots:
     void run();
+
 };
 
 #endif // MAINTAINTHREAD_H

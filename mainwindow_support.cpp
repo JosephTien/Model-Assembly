@@ -4,7 +4,7 @@ ModelManager* MainWindow_support::getModel(int tar){
     return &(ui->glMain->viewMgr->modelMgr[tar]);
 }
 
-void MainWindow_support::putStdModel(char * name,QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate){
+void MainWindow_support::putStdModel(const char * name,QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate){
     char file[30];
     sprintf(file,":/object/%s.obj",name);
     QFile stdObjFile(file);
@@ -12,7 +12,8 @@ void MainWindow_support::putStdModel(char * name,QVector3D color, QVector3D scal
     var->connectTarNum = ui->glMain->getTarnum()-1;
     ui->glMain->setColor(var->connectTarNum,color.x(),color.y(),color.z());
     getModel(var->connectTarNum)->ResetModel();
-    getModel(var->connectTarNum)->SetScale(scale.x(),scale.y(),scale.z());
+    //getModel(var->connectTarNum)->SetScale(scale.x(),scale.y(),scale.z());
+    getModel(var->connectTarNum)->scaleDepend_ori(QVector3D(0,0,0),scale.x(),scale.y(),scale.z());
     getModel(var->connectTarNum)->translate_pure(translate);
     getModel(var->connectTarNum)->rotateTo(rotate);
     ui->glMain->setVis(var->connectTarNum,1);
@@ -35,11 +36,11 @@ void MainWindow_support::applyCSG(char c, int er, int ee){
 }
 
 void MainWindow_support::drawCircleOnPlane(){
-    float r = getModel(var->tarObj)->connectorRadii_ori * 0.8;
+    float r = getModel(var->tarObj)->connectorRadii_ori * 0.95;
     QVector3D c = getModel(var->tarObj)->connectorCenter_ori;
     QVector3D n = getModel(var->tarObj)->connectorNormal_ori;
     int div = ui->edgeNum->value();
-    getModel(var->tarObj)->circleOnPlane(c,n,r,div);
+    getModel(var->tarObj)->circleOnPlane(c,n,r,div,var->cmpstate);
 }
 
 void MainWindow_support::putskelass(){
@@ -62,17 +63,20 @@ void MainWindow_support::deleteSkelSup(){
     var->skelMgr.loaded=false;
 }
 void MainWindow_support::stateInit(){
+    ui->sig1->setCheckable(false);
     ui->showSkel->setChecked(false);
     ui->showPlate->setChecked(false);
     ui->showSkel->setCheckable(false);
     ui->showPlate->setCheckable(false);
-    var->skelMgr.loaded = false;
-
+    deleteSkelSup();
+    for(int i=ui->glMain->getTarnum()-1;i>=0;i--){
+        ui->glMain->deleteTar(i);
+    }
     for(int i=ui->glMain->getTarnum_ass()-1;i>=0;i--){
         ui->glMain->deleteTar_ass(i);
     }
+
     var->skelMgr.Reset();
-    deleteSkelSup();
     ui->cmbbObject->clear();
 
 }
@@ -93,3 +97,4 @@ void MainWindow_support::fill(int tar){
     getModel(tar)->applyModelMatrix_force();
     getModel(tar)->refresh();
 }
+

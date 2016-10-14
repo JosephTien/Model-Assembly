@@ -71,12 +71,38 @@ private slots:
 
     void on_edgeNum_valueChanged(int arg1);
 
+    void on_btnShell_clicked();
+
+    void on_sig1_stateChanged(int arg1);
+\
+    void on_btnIso_clicked();
+
+    void on_btnCut_s_clicked();
+
+    void on_btnTest2_clicked();
+
+    void on_btnDecompose_clicked();
+
+    void on_btn_cut_s2_clicked();
+
+    void on_btn_cut_s3_clicked();
+
+    void on_btnPushFace_clicked();
+
+    void on_btnPullFace_clicked();
+
+    void on_btnIso_2_clicked();
+
+    void on_btnDecompose_2_clicked();
 private:
 
     Ui::MainWindow *ui;
     MaintainVar var;
     MainWindow_support support;
     MaintainThread maintainthread;
+    void quickpush(int n);
+    void quickpull(int n);
+    void isolateBody();
 
 };
 

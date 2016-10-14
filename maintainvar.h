@@ -18,8 +18,9 @@ public:
     std::vector<QVector3D> cuttingpoint;
     std::vector<QVector3D> cuttingpnorm;
     bool locked=false;
-    void lock(){while(locked)usleep(100);locked=true;}
+    void lock(){locked=true;}
     void unlock(){locked=false;}
+    int cmpstate = 0;
 };
 
 #endif // MAINTAINVAR_H

@@ -2,7 +2,7 @@
 #define MODELMANAGER_H
 #include "pch.h"
 #include "looplist.h"
-#define minThre ((float)(1.0e-5))
+#define minThre ((float)(1.0e-4))
 
 typedef std::vector<QVector3D> vecq3d;
 
@@ -117,6 +117,7 @@ public:
     QVector3D connectorNormal_ori;
     QVector3D connectorCenter_ori;
     float connectorRadii_ori;
+    float connectorRadii2_ori;
     Plane cuttingPlane;
     bool connectReverse = false;
     int detourSPIdx;//start point
@@ -146,6 +147,7 @@ public:
     void applyModelMatrix_force();
     void applyModelMatrix();
     void regenNormals();
+    void scaleDepend_ori(QVector3D c, float valx, float valy, float valz);
     void fix();
     void setColors(float r,float g,float b);
     void saveColors(){colors_ori=colors;}
@@ -159,6 +161,8 @@ public:
     void pushNormal(QVector3D n);
     void pushIndice(unsigned int a, unsigned int b, unsigned int c);
     vecq3d getIndicesVertice_ori(int idx);
+    QVector3D getCenter_ori();
+    QVector3D getMassCenter_ori();
     QVector3D getVertice_ori(int idx);
     QVector3D getVertice(int idx);
     QVector3D getColor(int idx);
@@ -166,6 +170,8 @@ public:
     void refresh_with_normalize(float scale);
     void refresh();
     void clearSupportData();
+    void ResetConnector();
+    void ResetMainData();
     vecq3d getSelecPointsByIdxs();
     vecq3d getSelecPointsByIdxs_ori();
     void clearConnector();
@@ -181,8 +187,10 @@ public:
     bool checkDetour();
     void pullConnect(float val);
     void pushConnect(float val);
+    void circleOnPlane(QVector3D c, QVector3D n, float radii, int div, int cmp);
     void circleOnPlane(QVector3D c, QVector3D n, float radii, int div);
     void linkContour(Plane mainPlane, std::vector<int> contourIdx);
+    void produceFace();
     std::vector<int> bfs(std::vector<bool> &visited, int rootIdx);
     /*data support*/
     QVector3D detourNormal();
@@ -195,6 +203,7 @@ public:
     QVector3D detourCenter_ori();
     QVector3D detourNormal_ori(std::vector<int> detourIdxs_this);
     QVector3D detourCenter_ori(std::vector<int> detourIdxs_this);
+    void moveVertice_ori(int idx, float x, float y, float z);
     void reverseDetours();
     void sortDetour();
     bool isCrossPlane(QVector3D v1, QVector3D v2, QVector3D s1, QVector3D s2, QVector3D s3);

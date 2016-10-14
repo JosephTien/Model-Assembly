@@ -19,12 +19,15 @@ int ModelViewer::getTarnum_ass(){
 
 void ModelViewer::deleteTar(int tar){
     makeCurrent();
-    vertexAttribute[tar].Destroy();
     tarnum--;
     for(int i=tar;i<tarnum;i++){
-        vertexAttribute[i] = vertexAttribute[i+1];
+        viewMgr->modelMgr[i] = viewMgr->modelMgr[i+1];
         vis[i]=vis[i+1];
+        reBuffer(i);
     }
+    vertexAttribute[tarnum].Destroy();
+    viewMgr->modelMgr[tarnum].Reset();
+
     update();
 }
 void ModelViewer::deleteTar_ass(int tar){
@@ -39,56 +42,35 @@ void ModelViewer::deleteTar_ass(int tar){
 
 void ModelViewer::setColor(int tar, float r,float g,float b){
     makeCurrent();
-    vector<float> vertices = viewMgr->modelMgr[tar].vertices_ori;
-    vector<float> normals = viewMgr->modelMgr[tar].normals;
-    vector<unsigned int> indices = viewMgr->modelMgr[tar].indices;
-    vector<float> empty;
-    vector<float> colors;
-    for(int i=0;i<(int)vertices.size();i+=3){colors.push_back(r);colors.push_back(g);colors.push_back(b);}
-    vertexAttribute[tar].BufferData(vertices, normals, empty, colors, indices);
+    colors.clear();
+    for(int i=0;i<(int)viewMgr->modelMgr[tar].vertices_ori.size();i+=3){colors.push_back(r);colors.push_back(g);colors.push_back(b);}
     viewMgr->modelMgr[tar].colors = colors;
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
+    update();
 }
 
 void ModelViewer::setColor(int tar, std::vector<float> colors){//no error size handle
     makeCurrent();
-    vector<float> vertices = viewMgr->modelMgr[tar].vertices_ori;
-    vector<float> normals = viewMgr->modelMgr[tar].normals;
-    vector<unsigned int> indices = viewMgr->modelMgr[tar].indices;
-    vector<float> empty;
-    vertexAttribute[tar].BufferData(vertices, normals, empty, colors, indices);
     viewMgr->modelMgr[tar].colors = colors;
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
+
 }
 
 void ModelViewer::reBuffer(int tar){
     makeCurrent();
-    vector<float> vertices = viewMgr->modelMgr[tar].vertices_ori;
-    vector<float> normals = viewMgr->modelMgr[tar].normals;
-    vector<unsigned int> indices = viewMgr->modelMgr[tar].indices;
-    vector<float> colors = viewMgr->modelMgr[tar].colors;
-    vector<float> empty;
-    vertexAttribute[tar].BufferData(vertices, normals, empty, colors, indices);
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
     update();
 }
 
 void ModelViewer::reBuffer_ass(int tar){
     makeCurrent();
-    vector<float> vertices = viewMgr->modelMgr_ass[tar].vertices_ori;
-    vector<float> normals = viewMgr->modelMgr_ass[tar].normals;
-    vector<unsigned int> indices = viewMgr->modelMgr_ass[tar].indices;
-    vector<float> colors = viewMgr->modelMgr_ass[tar].colors;
-    vector<float> empty;
-    vertexAttribute_ass[tar].BufferData(vertices, normals, empty, colors, indices);
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
 }
 
 void ModelViewer::reBuffer(){
     makeCurrent();
     for(int tar=0;tar<tarnum;tar++){
-        vector<float> vertices = viewMgr->modelMgr[tar].vertices_ori;
-        vector<float> normals = viewMgr->modelMgr[tar].normals;
-        vector<unsigned int> indices = viewMgr->modelMgr[tar].indices;
-        vector<float> colors = viewMgr->modelMgr[tar].colors;
-        vector<float> empty;
-        vertexAttribute[tar].BufferData(vertices, normals, empty, colors, indices);
+        vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
     }
 }
 
@@ -100,79 +82,71 @@ void ModelViewer::reBuffer_ass(){
         vector<unsigned int> indices = viewMgr->modelMgr_ass[tar].indices;
         vector<float> colors = viewMgr->modelMgr_ass[tar].colors;
         vector<float> empty;
-        vertexAttribute_ass[tar].BufferData(vertices, normals, empty, colors, indices);
+        vertexAttribute_ass[tar].BufferData(viewMgr->modelMgr_ass[tar].vertices_ori, viewMgr->modelMgr_ass[tar].normals, empty, viewMgr->modelMgr_ass[tar].colors, viewMgr->modelMgr_ass[tar].indices);
     }
 }
 
 void ModelViewer::load_rc(QFile * qfile){
     makeCurrent();
-    vertexAttribute[tarnum++].Create();
-    vector<float> empty;
-    vector<float> colors;
     loadObj_rc(qfile, positions, normals, indices);
+    colors.clear();
     for(int i=0;i<(int)positions.size();i+=3){colors.push_back(0.5f);colors.push_back(0.5f);colors.push_back(0.5f);}
-//    std::cout<<"load     : " << filename << std::endl;
-//    std::cout<<"face num : " << indices.size()/3 << std::endl;
-    vertexAttribute[tarnum-1].BufferData(positions, normals, empty, colors, indices);
+    tarnum++;
+    int tar = tarnum-1;
+    viewMgr->modelMgr[tar].Reset();
+    viewMgr->modelMgr[tar].vertices = positions;
+    viewMgr->modelMgr[tar].colors = colors;
+    viewMgr->modelMgr[tar].vertices_ori = positions;
+    viewMgr->modelMgr[tar].normals = normals;
+    viewMgr->modelMgr[tar].indices = indices;
+    viewMgr->modelMgr[tar].saveColors();
+    vertexAttribute[tar].Create();
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
     update();
-    viewMgr->modelMgr[tarnum-1].Reset();
-    viewMgr->modelMgr[tarnum-1].vertices = positions;
-    viewMgr->modelMgr[tarnum-1].colors = colors;
-    viewMgr->modelMgr[tarnum-1].vertices_ori = positions;
-    viewMgr->modelMgr[tarnum-1].normals = normals;
-    viewMgr->modelMgr[tarnum-1].indices = indices;
-    viewMgr->modelMgr[tarnum-1].saveColors();
-
 }
 
 void ModelViewer::load_rc_ass(QFile * qfile){
     makeCurrent();
-    vertexAttribute_ass[tarnum++].Create();
-    vector<float> empty;
-    vector<float> colors;
+    colors.clear();
     loadObj_rc(qfile, positions, normals, indices);
     for(int i=0;i<(int)positions.size();i+=3){colors.push_back(0.5f);colors.push_back(0.5f);colors.push_back(0.5f);}
-//    std::cout<<"load     : " << filename << std::endl;
-//    std::cout<<"face num : " << indices.size()/3 << std::endl;
-    vertexAttribute_ass[tarnum_ass-1].BufferData(positions, normals, empty, colors, indices);
+    tarnum_ass++;
+    int tar = tarnum_ass-1;
+    viewMgr->modelMgr_ass[tar].Reset();
+    viewMgr->modelMgr_ass[tar].vertices = positions;
+    viewMgr->modelMgr_ass[tar].colors = colors;
+    viewMgr->modelMgr_ass[tar].vertices_ori = positions;
+    viewMgr->modelMgr_ass[tar].normals = normals;
+    viewMgr->modelMgr_ass[tar].indices = indices;
+    viewMgr->modelMgr_ass[tar].saveColors();
+    vertexAttribute_ass[tar].Create();
+    vertexAttribute_ass[tar].BufferData(viewMgr->modelMgr_ass[tar].vertices_ori, viewMgr->modelMgr_ass[tar].normals, empty, viewMgr->modelMgr_ass[tar].colors, viewMgr->modelMgr_ass[tar].indices);
     update();
-    viewMgr->modelMgr_ass[tarnum_ass-1].Reset();
-    viewMgr->modelMgr_ass[tarnum_ass-1].vertices = positions;
-    viewMgr->modelMgr_ass[tarnum_ass-1].colors = colors;
-    viewMgr->modelMgr_ass[tarnum_ass-1].vertices_ori = positions;
-    viewMgr->modelMgr_ass[tarnum_ass-1].normals = normals;
-    viewMgr->modelMgr_ass[tarnum_ass-1].indices = indices;
-    viewMgr->modelMgr_ass[tarnum_ass-1].saveColors();
-
 }
 
 void ModelViewer::load(const char* filename){
     makeCurrent();
-    vertexAttribute[tarnum++].Create();
     vector<float> empty;
-    vector<float> colors;
     loadObj(filename, positions, normals, indices);
+    colors.clear();
     for(int i=0;i<(int)positions.size();i+=3){colors.push_back(0.5f);colors.push_back(0.5f);colors.push_back(0.5f);}
-//    std::cout<<"load     : " << filename << std::endl;
-//    std::cout<<"face num : " << indices.size()/3 << std::endl;
-    vertexAttribute[tarnum-1].BufferData(positions, normals, empty, colors, indices);
+    tarnum++;
+    int tar = tarnum-1;
+    viewMgr->modelMgr[tar].Reset();
+    viewMgr->modelMgr[tar].vertices = positions;
+    viewMgr->modelMgr[tar].indices = indices;
+    viewMgr->modelMgr[tar].vertices_ori = positions;
+    viewMgr->modelMgr[tar].normals = normals;
+    viewMgr->modelMgr[tar].regenNormals();
+    viewMgr->modelMgr[tar].colors = colors;
+    viewMgr->modelMgr[tar].saveColors();
+    vertexAttribute[tar].Create();
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
     update();
-    viewMgr->modelMgr[tarnum-1].Reset();
-    viewMgr->modelMgr[tarnum-1].vertices = positions;
-    viewMgr->modelMgr[tarnum-1].indices = indices;
-    viewMgr->modelMgr[tarnum-1].vertices_ori = positions;
-    viewMgr->modelMgr[tarnum-1].normals = normals;
-    viewMgr->modelMgr[tarnum-1].regenNormals();
-    viewMgr->modelMgr[tarnum-1].colors = colors;
-    viewMgr->modelMgr[tarnum-1].saveColors();
 }
 void ModelViewer::reload(const char* filename,int tar){
     makeCurrent();
     if(tar>=tarnum)return;
-    vertexAttribute[tar].Destroy();
-    vertexAttribute[tar].Create();
-    vector<float> empty;
-    vector<float> colors;
     loadObj(filename, positions, normals, indices);
     viewMgr->modelMgr[tar].vertices_ori = positions;
     viewMgr->modelMgr[tar].applyModelMatrix_force();
@@ -181,20 +155,45 @@ void ModelViewer::reload(const char* filename,int tar){
     viewMgr->modelMgr[tar].setColors(0.5f,0.5f,0.5f);
     viewMgr->modelMgr[tar].saveColors();
 
-    vertexAttribute[tar].BufferData(positions, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, indices);
+    vertexAttribute[tar].Destroy();
+    vertexAttribute[tar].Create();
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
     update();
 }
 
 void ModelViewer::copyObj(int tar){
     makeCurrent();
     vertexAttribute[tarnum++].Create();
-    vector<float> vertices = viewMgr->modelMgr[tar].vertices_ori;
-    vector<float> normals = viewMgr->modelMgr[tar].normals;
-    vector<unsigned int> indices = viewMgr->modelMgr[tar].indices;
-    vector<float> colors = viewMgr->modelMgr[tar].colors;
-    vector<float> empty;
-    vertexAttribute[tarnum-1].BufferData(vertices, normals, empty, colors, indices);
     viewMgr->modelMgr[tarnum-1] = viewMgr->modelMgr[tar];
+    tar = tarnum-1;
+    vertexAttribute[tar].BufferData(viewMgr->modelMgr[tar].vertices_ori, viewMgr->modelMgr[tar].normals, empty, viewMgr->modelMgr[tar].colors, viewMgr->modelMgr[tar].indices);
+}
+
+void ModelViewer::generateCube(QVector3D pup,QVector3D plow){
+    makeCurrent();
+    float rec[] = {-1,-1,-1,1,-1,-1,-1,1,-1,1,1,-1,-1,-1,1,1,-1,1,-1,1,1,1,1,1};
+    float pos[24];
+    float e[] = {0};
+    for(int i=0;i<24;i+=3){
+        pos[i] = rec[i] > 0 ? rec[i]=pup.x():rec[i]=plow.x();
+        pos[i+1] = rec[i+1] > 0 ? rec[i+1]=pup.y():rec[i+1]=plow.y();
+        pos[i+2] = rec[i+2] > 0 ? rec[i+2]=pup.z():rec[i+2]=plow.z();
+    }
+    vector<float> empty;
+    vector<float> normals(rec,rec+24);
+    vector<float> positions(pos,pos+24);
+    vector<float> colors = {0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f,0.5f};
+    vector<unsigned int> indices = {0,2,1,2,3,1,3,7,1,7,5,1,5,4,1,4,0,1,0,4,2,4,6,2,6,7,2,7,3,2,5,7,4,7,6,4};
+    vertexAttribute[tarnum++].Create();
+    vertexAttribute[tarnum-1].BufferData(positions, normals, empty, colors, indices);
+    setVis(tarnum-1,1);
+
+    viewMgr->modelMgr[tarnum-1].Reset();
+    viewMgr->modelMgr[tarnum-1].vertices = positions;
+    viewMgr->modelMgr[tarnum-1].vertices_ori = positions;
+    viewMgr->modelMgr[tarnum-1].indices = indices;
+    viewMgr->modelMgr[tarnum-1].normals = normals;
+    viewMgr->modelMgr[tarnum-1].colors = colors;
 }
 
 void ModelViewer::generateTest(){

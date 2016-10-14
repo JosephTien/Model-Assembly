@@ -85,12 +85,25 @@ QVector3D ModelManager::detourCenter(){
 }
 QVector3D ModelManager::detourCenter_ori(){
     QVector3D c(0,0,0);
-    for(int i=0;i<detourIdxs.size();i++){
-        QVector3D v = getVertice_ori(detourIdxs[i]);
-        c+=v;
+    int ds = detourIdxs.size();
+    float total=0;
+    for(int i=0;i<ds;i++){
+        QVector3D v1 = getVertice_ori(detourIdxs[i]);
+        QVector3D v2 = getVertice_ori(detourIdxs[(i+1)%ds]);
+        float l = (v1-v2).length();
+        c+=(v1+v2)/2;
+        total+=l;
     }
     return c/detourIdxs.size();
 }
+//QVector3D ModelManager::detourCenter_ori(){
+//    QVector3D c(0,0,0);
+//    for(int i=0;i<detourIdxs.size();i++){
+//        QVector3D v = getVertice_ori(detourIdxs[i]);
+//        c+=v;
+//    }
+//    return c/detourIdxs.size();
+//}
 
 QVector3D ModelManager::detourCenter_ori(std::vector<int> detourIdxs_this){
     QVector3D c(0,0,0);
@@ -149,4 +162,8 @@ void ModelManager::clearConnector(){
         connectorFaceReady=false;
         applyed=false;applyModelMatrix();
     }
+}
+
+void ModelManager::moveVertice_ori(int idx, float x,float y, float z){
+    putVertice_ori(idx, getVertice_ori(idx)+QVector3D(x,y,z));
 }

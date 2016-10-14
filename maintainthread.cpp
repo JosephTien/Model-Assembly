@@ -14,7 +14,12 @@ void MaintainThread::run(){
         var->lock();
         if(ui->glMain->getTarnum()>0){
             if(support.getModel(var->tarObj)->selecPoints.size()>0){
-                var->skelMgr.Reset();
+
+                ui->sig1->setCheckable(true);
+                ui->sig1->setChecked(true);
+                ui->sig1->setChecked(false);
+                ui->sig1->setCheckable(false);
+
                 ui->showSkel->setChecked(false);
                 ui->showSkel->setCheckable(false);
                 ui->showPlate->setChecked(false);

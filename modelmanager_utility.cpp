@@ -96,8 +96,12 @@ void ModelManager::cutByDetour(int state){
         visited[detourIdxs_all[i]]=true;
     }
     int rootIdx = -1;
-    QVector3D c = detourCenter();
+    /*QVector3D c = detourCenter();
     QVector3D n = detourNormal();
+    */
+    QVector3D c = cuttingPlane.center;
+    QVector3D n = cuttingPlane.normal;
+
     for(int i=0;i<(int)vertices.size()/3;i++){
         QVector3D v = getVertice(i);
         if(state>0){
@@ -151,8 +155,13 @@ void ModelManager::cutByDetour(int state){
     for(int i=0;i<(int)detourIdxs.size();i++){
         connectorRadii_ori = std::min(connectorRadii_ori,(getVertice_ori(detourIdxs[i])-connectorCenter_ori).length());
     }
+    connectorRadii2_ori=0;
+    for(int i=0;i<(int)detourIdxs.size();i++){
+        connectorRadii2_ori = std::max(connectorRadii2_ori,(getVertice_ori(detourIdxs[i])-connectorCenter_ori).length());
+    }
     if(state<0)connectReverse = true;
     connectorReady = true;
+    connectorFaceReady = false;
     setColors(0.5f,0.5f,0.5f);
     applyed=false;applyModelMatrix();
 }
@@ -452,6 +461,10 @@ void ModelManager::pushConnect(float val){
 }
 
 void ModelManager::circleOnPlane(QVector3D c, QVector3D n, float radii, int div){
+    circleOnPlane(c,n,radii,div,0);
+}
+
+void ModelManager::circleOnPlane(QVector3D c, QVector3D n, float radii, int div, int cmp){
     std::vector<int> facetsOnPlane;
     std::set<int> verticesOnPlane;
     Plane plane = Plane(n,c);
@@ -464,12 +477,37 @@ void ModelManager::circleOnPlane(QVector3D c, QVector3D n, float radii, int div)
             verticesOnPlane.insert(indices[i*3+2]);
         }
     }
-    std::vector<int> contourIdx;
+    std::vector<int> contourIdxs;
     QMatrix4x4 rotationMat;
+    QMatrix4x4 rotationMat_fix;
     rotationMat.rotate( acosf(QVector3D::dotProduct(n,QVector3D(0,0,1)))/(2*M_PI)*360, QVector3D::crossProduct(n,QVector3D(0,0,1)));
+    rotationMat_fix.setToIdentity();
+    if(cmp!=0){
+        QMatrix4x4 rotationMat_fix_best;
+        QVector3D firstPoint_best;
+        if(cmp>0)firstPoint_best = QVector3D(0,FLT_MIN,0);
+        else firstPoint_best = QVector3D(0,FLT_MAX,0);
+        for(int i=0;i<360;i++){
+            QMatrix4x4 rotationMat_fix_this;
+            rotationMat_fix_this.rotate(i,n);
+            QVector3D firstPoint = (QVector4D(1,0,0,1)*rotationMat*rotationMat_fix_this).toVector3DAffine();
+            bool cmpstate=false;
+            if(cmp==1&&firstPoint.x()>firstPoint_best.x())cmpstate=true;
+            else if(cmp==2&&firstPoint.y()>firstPoint_best.y())cmpstate=true;
+            else if(cmp==3&&firstPoint.z()>firstPoint_best.z())cmpstate=true;
+            else if(cmp==-1&&firstPoint.x()<firstPoint_best.x())cmpstate=true;
+            else if(cmp==-2&&firstPoint.y()<firstPoint_best.y())cmpstate=true;
+            else if(cmp==-3&&firstPoint.z()<firstPoint_best.z())cmpstate=true;
+            if(cmpstate){
+                rotationMat_fix_best = rotationMat_fix_this;
+                firstPoint_best = firstPoint;
+            }
+        }
+        rotationMat_fix = rotationMat_fix_best;
+    }
     float conf = connectReverse?-1.0f:1.0f;
     for(int i=0;i<div;i++){
-        QVector3D p = (QVector4D(radii*cos(2*M_PI*conf*i/div),radii*sin(2*M_PI*conf*i/div),0,1)*rotationMat).toVector3DAffine() + c;
+        QVector3D p = (QVector4D(radii*cos(2*M_PI*conf*i/div),radii*sin(2*M_PI*conf*i/div),0,1)*rotationMat*rotationMat_fix).toVector3DAffine() + c;
         bool finded = false;
         int fops = (int)facetsOnPlane.size();
         for(int i=0;i<fops;i++){
@@ -489,7 +527,7 @@ void ModelManager::circleOnPlane(QVector3D c, QVector3D n, float radii, int div)
                 indices[facetsOnPlane[i]*3]=pi;
                 facetsOnPlane.push_back(indices.size()/3-2);
                 facetsOnPlane.push_back(indices.size()/3-1);
-                contourIdx.push_back(pi);
+                contourIdxs.push_back(pi);
                 verticesOnPlane.insert(pi);
                 finded = true;
                 break;
@@ -506,17 +544,18 @@ void ModelManager::circleOnPlane(QVector3D c, QVector3D n, float radii, int div)
                     minVal = d;
                 }
             }
-            contourIdx.push_back(minIdx);
+            contourIdxs.push_back(minIdx);
         }
     }
     applyed = false;applyModelMatrix();
 
-//    for(int i=0;i<contourIdx.size();i++){
-//        putColor(contourIdx[i],QVector3D(1.0f,0.5f,0.5f));
-//        std::cout << contourIdx[i] << std::endl;
+//    for(int i=0;i<contourIdxs.size();i++){
+//        putColor(contourIdxs[i],QVector3D(1.0f,0.5f,0.5f));
+//        std::cout << contourIdxs[i] << std::endl;
 //    }
     /****************************************************/
-    linkContour(plane, contourIdx);
+    plane.radii = radii;
+    linkContour(plane, contourIdxs);
 }
 std::vector<int> ModelManager::bfs(std::vector<bool> &visited, int rootIdx){
     calNeighbor();
@@ -553,11 +592,11 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
     int ids = indices.size();
     for(int i=0;i<ids/3;i++){
         vecq3d v=getIndicesVertice_ori(i);
-//        QVector3D mid = (v[0]+v[1]+v[2])/3;
-//        if(std::fabs(mainPlane.distanceToPoint(mid)) <= minThre){
-        if(std::fabs(mainPlane.distanceToPoint(v[0])) <= minThre
-        && std::fabs(mainPlane.distanceToPoint(v[1])) <= minThre
-        && std::fabs(mainPlane.distanceToPoint(v[2])) <= minThre){
+        QVector3D mid = (v[0]+v[1]+v[2])/3;
+        if(std::fabs(mainPlane.distanceToPoint(mid)) <= minThre){
+//        if(std::fabs(mainPlane.distanceToPoint(v[0])) <= minThre
+//        && std::fabs(mainPlane.distanceToPoint(v[1])) <= minThre
+//        && std::fabs(mainPlane.distanceToPoint(v[2])) <= minThre){
             facetsOnPlane.push_back(i);
 //            mid += mainPlane.normal*2;
 //            int pi = pushVertice_ori(mid);
@@ -569,7 +608,8 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
 //            indices[i*3+2] = indices[i*3];
 //            indices[i*3] = pi;
             }
-        }
+    }
+    std::vector<bool> exist;exist.resize(vertices_ori.size()/3,false);
     for(int k=0;k<div;k++){
         edges.clear();
         QVector3D p1 = getVertice_ori(contourIdxs[k]);
@@ -607,8 +647,12 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
                         vertices_ori.push_back(v[flag].x());vertices_ori.push_back(v[flag].y());vertices_ori.push_back(v[flag].z());
                         colors.push_back(cl[flag-3].x());colors.push_back(cl[flag-3].y());colors.push_back(cl[flag-3].z());
                         normals.push_back(nm[flag-3].x());normals.push_back(nm[flag-3].y());normals.push_back(nm[flag-3].z());
+                        exist.push_back(true);
                     }
                     flag++;
+                }else{
+                    if(d1<minThre)exist[indices[jj+i]]=true;
+                    if(d2<minThre)exist[indices[jj+(i+1)%3]]=true;
                 }
             }
             if(flag==5){
@@ -646,21 +690,35 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
                     indices.push_back(idx[0]);indices.push_back(idx[3]);indices.push_back(idx[2]);
                     //indices.push_back(idx[3]);indices.push_back(idx[1]);indices.push_back(idx[2]);
                     indices[jj+1] = idx[1];indices[jj+2] = idx[2];indices[jj] = idx[3];
+                    exist[idx[2]] = true;
                 }else if(interseced[1]){
                     idx[3]=edges.find(Edge(idx[1],idx[2]))->mid;
                     indices.push_back(idx[0]);indices.push_back(idx[1]);indices.push_back(idx[3]);
                     //indices.push_back(idx[0]);indices.push_back(idx[3]);indices.push_back(idx[2]);
                     indices[jj] = idx[0]; indices[jj+1] = idx[3]; indices[jj+2] = idx[2];
+                    exist[idx[0]] = true;
                 }else if(interseced[2]){
                     idx[3]=edges.find(Edge(idx[0],idx[2]))->mid;
                     indices.push_back(idx[0]);indices.push_back(idx[1]);indices.push_back(idx[3]);
                     //indices.push_back(idx[3]);indices.push_back(idx[1]);indices.push_back(idx[2]);
                     indices[jj] = idx[3]; indices[jj+1] = idx[1]; indices[jj+2] = idx[2];
+                   exist[idx[1]] = true;
                 }
                 facetsOnPlane.push_back(indices.size()/3-1);
             }
         }
     }
+    for(int i=0;i<exist.size();i++){
+        if(exist[i]){
+            if((getVertice_ori(i)-mainPlane.center).length()>mainPlane.radii){
+                exist[i] = false;
+            }
+        }
+    }
+    for(int i=0;i<contourIdxs.size();i++){
+        exist[contourIdxs[i]]=true;
+    }
+
     //fix();error?
     /************************************************/
     std::set<int> verticesOnPlane;
@@ -671,30 +729,42 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
     }
     /************************************************/
     std::vector<int> boundry,contain;
-    std::vector<bool> exist;exist.resize(vertices_ori.size()/3,false);
-    QVector3D c(0,0,0);
-    for(int i=0;i<contourIdxs.size();i++)c+=getVertice_ori(contourIdxs[i]);
-    c/=contourIdxs.size();
+    for(auto idx : verticesOnPlane){
+        if(exist[idx]){
+            boundry.push_back(idx);
+        }
+    }
+//    for(auto idx : verticesOnPlane){
+//        QVector3D v = getVertice_ori(idx);
+//        int in=0,out=0,on=0;
+//        for(int i=0;i<bound.size();i++){
+//            if(abs(bound[i].distanceToPoint(v))<minThre){
+//                on++;
+//            }else if(bound[i].distanceToPoint(v)>0){
+//                in++;
+//            }else{
+//                out++;
+//            }
+//        }
+//        if(on>0&&out==0){
+//            boundry.push_back(idx);
+//            exist[idx] = true;
+//        }else if(on==0&&out==0){
+//            contain.push_back(idx);
+//            exist[idx] = true;
+//        }
+//    }
     for(auto idx : verticesOnPlane){
         QVector3D v = getVertice_ori(idx);
-        int in=0,out=0,on=0;
+        int out=0;
         for(int i=0;i<bound.size();i++){
-            if(abs(bound[i].distanceToPoint(v))<minThre){
-                on++;
-            }else if(bound[i].distanceToPoint(v)>0){
-                in++;
-            }else{
+            if(bound[i].distanceToPoint(v)<0){
                 out++;
             }
         }
-//        if(on>0){
-//            putColor(idx, QVector3D(0,0,0));
-//        }
-        if(on>0&&out==0){
+        if(out==0){
             boundry.push_back(idx);
-            exist[idx] = true;
-        }else if(on==0&&out==0){
-            contain.push_back(idx);
+            if(!exist[idx])contain.push_back(idx);
             exist[idx] = true;
         }
     }
@@ -742,22 +812,136 @@ void ModelManager::linkContour(Plane mainPlane, std::vector<int> contourIdxs){
     }
     /************************************************/
     connectorFaceIdxs.clear();
+
     for(int i=0;i<boundry.size();i++){
         exist[boundry[i]] = false;
-        connectorFaceIdxs.push_back(replace[boundry[i]]);
+//        connectorFaceIdxs.push_back(replace[boundry[i]]);
     }
-    for(int i=0;i<contain.size();i++){
-        connectorFaceIdxs.push_back(contain[i]);
-    }
-
-//    for(auto idx : verticesOnPlane){
-//        if(exist[idx]){
-//            putVertice_ori(idx, getVertice_ori(idx)+mainPlane.normal*10);
-//            connectorFaceIdxs.push_back(idx);
-//        }
+//    for(int i=0;i<contain.size();i++){
+//        connectorFaceIdxs.push_back(contain[i]);
 //    }
+
+    for(auto idx : verticesOnPlane){
+        if(exist[idx]){
+            connectorFaceIdxs.push_back(idx);
+        }
+    }
     connectorFaceReady = true;
     /************************************************/
     applyed = false;applyModelMatrix();
 }
 
+void ModelManager::produceFace(){
+    Plane mainPlane = cuttingPlane;
+    std::vector<bool> exist;exist.resize(vertices_ori.size()/3,false);
+    std::vector<int> facetsOnPlane;
+    facetsOnPlane.clear();
+    int ids = indices.size();
+    for(int i=0;i<ids/3;i++){
+        vecq3d v=getIndicesVertice_ori(i);
+        bool on[3]={false,false,false};
+        int cnt=0;
+        if(std::fabs(mainPlane.distanceToPoint(v[0])) <= minThre){on[0]=true;cnt++;}
+        if(std::fabs(mainPlane.distanceToPoint(v[1])) <= minThre){on[1]=true;cnt++;}
+        if(std::fabs(mainPlane.distanceToPoint(v[2])) <= minThre){on[2]=true;cnt++;}
+        if(cnt==3){
+            facetsOnPlane.push_back(i);
+        }else if(cnt>0){
+            if(on[0]){
+                exist[indices[i*3]]=true;
+            }
+            if(on[1]){
+                exist[indices[i*3+1]]=true;
+            }
+            if(on[2]){
+                exist[indices[i*3+2]]=true;
+            }
+        }
+    }
+    std::set<int> verticesOnPlane;
+    for(int i=0;i<facetsOnPlane.size();i++){
+        verticesOnPlane.insert(indices[facetsOnPlane[i]*3]);
+        verticesOnPlane.insert(indices[facetsOnPlane[i]*3+1]);
+        verticesOnPlane.insert(indices[facetsOnPlane[i]*3+2]);
+    }
+    /************************************************/
+    std::vector<int> boundry;
+    std::vector<int> replace;
+    int rootIdx,curIdx;
+    for(int i=0;i<vertices_ori.size()/3;i++){
+        replace.push_back(i);
+        if(exist[i])rootIdx = i;
+    }
+    std::vector<bool> visited;visited.resize(vertices_ori.size()/3,false);
+    calNeighbor();
+    curIdx=rootIdx;
+    do{
+        bool has=false;
+        for(int i=0;i<neighbor[curIdx].size();i++){
+            if(exist[neighbor[curIdx][i]] && !visited[neighbor[curIdx][i]]){
+                boundry.push_back(curIdx);
+                curIdx = neighbor[curIdx][i];
+                visited[curIdx] = true;
+                has = true;
+                break;
+            }
+        }
+        if(!has)break;
+    }while(curIdx!=rootIdx);
+    /**/
+    int bs = boundry.size();
+    QVector3D c(0,0,0);
+    for(int i=0;i<boundry.size();i++){
+        c+=getVertice_ori(boundry[i]);
+    }c/=boundry.size();
+    QVector3D n(0,0,0);
+    for(int i=0;i<boundry.size();i++){
+        n+=QVector3D::crossProduct(getVertice_ori(boundry[i])-c,getVertice_ori(boundry[(i+1)%bs])-c);
+    }
+    if(dotProduct(n, mainPlane.normal)<0){
+        for(int i=1;i<(bs+1)/2;i++){
+            unsigned int t = boundry[i];
+            boundry[i] = boundry[bs-i];
+            boundry[bs-i] = t;
+        }
+    }
+    /**/
+
+    for(auto idx : verticesOnPlane){
+        exist[idx] = true;
+    }
+    for(int i=0;i<boundry.size();i++){
+        replace[boundry[i]]=pushVertice_ori(getVertice_ori(boundry[i]));
+        pushColor(QVector3D(0.5f,0.5f,0.5f));
+        pushNormal(mainPlane.normal);
+        verticesOnPlane.insert(replace[boundry[i]]);
+        exist.push_back(true);
+    }
+    /************************************************/
+    for(int i=0;i<facetsOnPlane.size();i++){
+        int jj = facetsOnPlane[i]*3;
+        if(exist[indices[jj]]&&exist[indices[jj+1]]&&exist[indices[jj+2]]){
+            indices[jj]   = replace[indices[jj]];
+            indices[jj+1] = replace[indices[jj+1]];
+            indices[jj+2] = replace[indices[jj+2]];
+        }
+    }
+    for(int i=0;i<boundry.size();i++){
+        exist[boundry[i]] = false;
+    }
+    /************************************************/
+    for(int i=0;i<boundry.size();i++){
+        pushIndice(boundry[i],replace[boundry[(i+1)%bs]],replace[boundry[i]]);
+        pushIndice(replace[boundry[(i+1)%bs]],boundry[i],boundry[(i+1)%bs]);
+    }
+    /************************************************/
+    connectorFaceIdxs.clear();
+    for(auto idx : verticesOnPlane){
+        if(exist[idx]){
+            connectorFaceIdxs.push_back(idx);
+        }
+    }
+    connectorFaceReady = true;
+    /************************************************/
+    applyed = false;applyModelMatrix();
+}

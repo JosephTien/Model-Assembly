@@ -19,7 +19,7 @@ public:
         this->var = var;
     }
     ModelManager * getModel(int tar);
-    void putStdModel(char * name, QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate);
+    void putStdModel(const char * name, QVector3D color, QVector3D scale, QVector3D translate, QVector3D rotate);
     void applyCSG(char c,int er, int ee);
     void drawCircleOnPlane();
     void putskelass();

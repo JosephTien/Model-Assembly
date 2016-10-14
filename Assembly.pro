@@ -49,7 +49,6 @@ HEADERS  += mainwindow.h \
 PRECOMPILED_HEADER = pch.h #pch_cgal.h
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_RELEASE -= -O2
-#QMAKE_CXXFLAGS += -bigobj
 
 FORMS    += mainwindow.ui
 
@@ -59,6 +58,7 @@ RESOURCES += \
 
 win32 {
     message(win)
+    QMAKE_CXXFLAGS += -bigobj
     INCLUDEPATH += $$PWD/externals/include/glew/
     INCLUDEPATH += $$PWD/externals/include/eigen3/
     INCLUDEPATH += $$PWD/externals/include/glm/

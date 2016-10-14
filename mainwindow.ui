@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1070</width>
-    <height>670</height>
+    <width>1004</width>
+    <height>668</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,11 +19,11 @@
      <rect>
       <x>9</x>
       <y>9</y>
-      <width>901</width>
+      <width>971</width>
       <height>601</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout_1" stretch="9,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_1" stretch="9,0,0,0">
      <item>
       <widget class="ModelViewer" name="glMain"/>
      </item>
@@ -131,101 +131,153 @@
        </item>
       </layout>
      </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="verticalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>920</x>
-      <y>9</y>
-      <width>113</width>
-      <height>601</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QPushButton" name="btnPushConnector">
-       <property name="text">
-        <string>Push Conn</string>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <widget class="QPushButton" name="btnOutput">
+         <property name="text">
+          <string>Output</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnLoadSkel">
+         <property name="text">
+          <string>Load Skel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCutSkel">
+         <property name="text">
+          <string>Cut Skel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPushConnector">
+         <property name="text">
+          <string>Push Conn</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPullConnector">
+         <property name="text">
+          <string>Pull Conn</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPushFace">
+         <property name="text">
+          <string>Push Face</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPullFace">
+         <property name="text">
+          <string>Pull Face</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnPutConnector">
+         <property name="text">
+          <string>Put Conn</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDig">
+         <property name="text">
+          <string>Dig</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnSwell">
+         <property name="text">
+          <string>Swell</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_cut_s2">
+         <property name="text">
+          <string>Special Cut 2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btn_cut_s3">
+         <property name="text">
+          <string>Special Cut 3</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
-      <widget class="QPushButton" name="btnPullConnector">
-       <property name="text">
-        <string>Pull Conn</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnPutConnector">
-       <property name="text">
-        <string>Put Conn</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnDig">
-       <property name="text">
-        <string>Dig</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnSwell">
-       <property name="text">
-        <string>Swell</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnOutput">
-       <property name="text">
-        <string>Output</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnLoadSkel">
-       <property name="text">
-        <string>Load Skel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="btnCutSkel">
-       <property name="text">
-        <string>Cut Skel</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="Line" name="line_5">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QPushButton" name="btnTest2">
+         <property name="text">
+          <string>Test2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnIso">
+         <property name="text">
+          <string>Isolate Body</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnIso_2">
+         <property name="text">
+          <string>Isolate Body2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnShell">
+         <property name="text">
+          <string>Make Shell</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnCut_s">
+         <property name="text">
+          <string>Special Cut</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDecompose">
+         <property name="text">
+          <string>Decompose</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnDecompose_2">
+         <property name="text">
+          <string>Decompose2</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="sig1">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </widget>
@@ -235,8 +287,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1070</width>
-     <height>22</height>
+     <width>1004</width>
+     <height>21</height>
     </rect>
    </property>
   </widget>

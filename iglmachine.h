@@ -152,7 +152,7 @@ public:
         }
     }
 
-    void readFile(std::string name, char * filePath){
+    void readFile(std::string name, const char * filePath){
         Eigen::MatrixXd V;
         Eigen::MatrixXi F;
         igl::read_triangle_mesh(filePath,V,F);
