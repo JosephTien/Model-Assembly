@@ -91,10 +91,10 @@ QVector3D ModelManager::detourCenter_ori(){
         QVector3D v1 = getVertice_ori(detourIdxs[i]);
         QVector3D v2 = getVertice_ori(detourIdxs[(i+1)%ds]);
         float l = (v1-v2).length();
-        c+=(v1+v2)/2;
+        c+=(v1+v2)*l/2;
         total+=l;
     }
-    return c/detourIdxs.size();
+    return c/total;
 }
 //QVector3D ModelManager::detourCenter_ori(){
 //    QVector3D c(0,0,0);

@@ -69,8 +69,8 @@ void ModelManager::setColors(float r,float g,float b){
         colors.push_back(g);
         colors.push_back(b);
     }
+    saveColors();
 }
-
 
 void ModelManager::paintCurvures(){
     float min,max;
@@ -97,7 +97,7 @@ void ModelManager::paintCurvures(){
 void ModelManager::paintSelecIdxs(){
     int ring = 1;
     applyModelMatrix();
-    saveColors();
+    //saveColors();
     for(int j=0;j<(int)selecIdxs.size();j++){
         std::vector<int> pl = nRingNeighbor(selecIdxs[j],ring);
         for(int i=0;i<(int)pl.size();i++){
@@ -153,7 +153,21 @@ void ModelManager::rotateTo(QVector3D vec){
     vec.normalize();
     rotationMatrix.rotate( qRadiansToDegrees(acos(dotProduct(QVector3D(0,0,1),vec))), QVector3D::crossProduct(QVector3D(0,0,1),vec));
 }
-
+void ModelManager::rotateTo_u(QVector3D vec){
+    applyed = false;
+    vec.normalize();
+    rotationMatrix.rotate( qRadiansToDegrees(acos(dotProduct(QVector3D(0,1,0),vec))), QVector3D::crossProduct(QVector3D(0,1,0),vec));
+}
+void ModelManager::rotateFrom(QVector3D vec){
+    applyed = false;
+    vec.normalize();
+    rotationMatrix.rotate( -qRadiansToDegrees(acos(dotProduct(QVector3D(0,0,1),vec))), QVector3D::crossProduct(QVector3D(0,0,1),vec));
+}
+void ModelManager::rotateFrom_u(QVector3D vec){
+    applyed = false;
+    vec.normalize();
+    rotationMatrix.rotate( -qRadiansToDegrees(acos(dotProduct(QVector3D(0,1,0),vec))), QVector3D::crossProduct(QVector3D(0,1,0),vec));
+}
 void ModelManager::translate(QVector3D movement){
     applyed = false;
     translationMatrix.translate(movement*viewRotationMatrix);
@@ -242,6 +256,18 @@ void ModelManager::applyModelMatrix(){
     applyed = true;
 }
 
+void ModelManager::renewByMatrix(){
+    applyModelMatrix_force();
+    vertices_ori.resize(vertices.size());
+    for(int i=0;i<(int)vertices.size();i++){
+        vertices_ori[i] = vertices[i];
+    }
+    scaleMatrix.setToIdentity();
+    translationMatrix.setToIdentity();
+    rotationMatrix.setToIdentity();
+    scalex = scaley = scalez = 1;
+}
+
 void ModelManager::regenNormals(){
     vecq3d verts;
     vecq3d norms;
@@ -259,7 +285,6 @@ void ModelManager::regenNormals(){
         norms[ib] += normal;
         norms[ic] += normal;
     }
-
     for (int i = 0; i<(int) norms.size(); i++){
         norms[i].normalize();
     }
@@ -473,6 +498,51 @@ void ModelManager::fix(){ // clear uncovered point
     applyed=false;applyModelMatrix();
     neighbor.clear();
 }
+QVector3D ModelManager::minYVertice_ori(){
+    int idx;
+    int min = FLT_MAX;
+    for(int i=0;i<vertices_ori.size()/3;i++){
+        if(vertices_ori[i*3+1]<min){
+            min = vertices_ori[i*3+1];
+            idx = i;
+        }
+    }
+    return getVertice_ori(idx);
+}
+QVector3D ModelManager::minZVertice_ori(){
+    int idx;
+    int min = FLT_MAX;
+    for(int i=0;i<vertices_ori.size()/3;i++){
+        if(vertices_ori[i*3+2]<min){
+            min = vertices_ori[i*3+2];
+            idx = i;
+        }
+    }
+    return getVertice_ori(idx);
+}
+QVector3D ModelManager::averageVertice_ori(){
+    QVector3D average;
+    float areaSum;
+    for(int i=0;i<indices.size()/3;i++){
+        Triangle tri = Triangle(getVertice_ori(indices[i*3]),getVertice_ori(indices[i*3+1]),getVertice_ori(indices[i*3+2]));
+        average+=tri.cent()*tri.area();
+        areaSum+=tri.area();
+    }
+    average/=areaSum;
+    return average;
+}
+float ModelManager::minY(){
+    int idx;
+    int min = FLT_MAX;
+    for(int i=0;i<vertices.size()/3;i++){
+        if(vertices[i*3+1]<min){
+            min = vertices[i*3+1];
+            idx = i;
+        }
+    }
+    return min;
+}
+
 //maintainable mesh
 //to maintain update apply
 //color

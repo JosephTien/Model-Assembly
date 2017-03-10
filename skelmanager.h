@@ -91,30 +91,32 @@ public :
         c.push_back(partPosition("neck"));
         temp1 = (partPosition("neck")-partPosition("body")).normalized();
         temp2 = (partPosition("head")-partPosition("neck")).normalized();
-        n.push_back((temp1+temp2)/2);
-        //n.push_back(temp2);
+        //n.push_back((temp1+temp2)/2);
+        n.push_back(temp2);
 
         c.push_back(partPosition("shoulder_left"));
-        temp1 = (partPosition("shoulder_left")-partPosition("shoulder_right")).normalized();
+        //temp1 = (partPosition("shoulder_left")-partPosition("shoulder_right")).normalized();
+        temp1 = (partPosition("elbow_left")-partPosition("shoulder_left")).normalized();
         n.push_back(temp1);
 
         c.push_back(partPosition("shoulder_right"));
-        temp1 = (partPosition("shoulder_right")-partPosition("shoulder_left")).normalized();
+        temp1 = (partPosition("elbow_right")-partPosition("shoulder_right")).normalized();
         n.push_back(temp1);
 
         c.push_back(partPosition("wist"));
         temp1 = (partPosition("wist")-partPosition("neck")).normalized();
-        n.push_back(temp1);
+        n.push_back(-temp1);
 
         //c.push_back(partPosition("elbow_left"));
-        c.push_back((partPosition("hand_left")-partPosition("elbow_left"))*0.2f+partPosition("elbow_left"));
+        //c.push_back((partPosition("shoulder_left")-partPosition("elbow_left"))*0.2f+partPosition("elbow_left"));
+        c.push_back(partPosition("elbow_left"));
         temp1 = (partPosition("elbow_left")-partPosition("shoulder_left")).normalized();
         temp2 = (partPosition("hand_left")-partPosition("elbow_left")).normalized();
         //n.push_back((temp1+temp2)/2);
         n.push_back(temp2);
 
         //c.push_back(partPosition("elbow_right"));
-        c.push_back((partPosition("hand_right")-partPosition("elbow_right"))*0.2f+partPosition("elbow_right"));
+        c.push_back(partPosition("elbow_right"));
         temp1 = (partPosition("elbow_right")-partPosition("shoulder_right")).normalized();
         temp2 = (partPosition("hand_right")-partPosition("elbow_right")).normalized();
         //n.push_back((temp1+temp2)/2);
@@ -145,6 +147,90 @@ public :
         rotationMat.rotate( 90, QVector3D(0,0,1));
         temp1 = (QVector4D(temp1.x(),temp1.y(),temp1.z(),1)*rotationMat).toVector3DAffine();
         n.push_back(temp1);
+    }
+
+    std::vector<bool> getCutInfoIsReverseN(){
+        std::vector<bool> rtn;
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(true);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        rtn.push_back(false);
+        return rtn;
+    }
+
+
+    void getCutInfo2(std::vector<QVector3D> &c, std::vector<QVector3D> &n){
+        QVector3D temp1,temp2;
+        c.clear();
+        n.clear();
+
+        c.push_back(partPosition("neck"));
+        temp1 = (partPosition("neck")-partPosition("body")).normalized();
+        temp2 = (partPosition("head")-partPosition("neck")).normalized();
+        //n.push_back((temp1+temp2)/2);
+        n.push_back(-temp1);
+
+        c.push_back(partPosition("shoulder_left"));
+        temp2 = (partPosition("shoulder_right")-partPosition("shoulder_left")).normalized();
+        //temp1 = (partPosition("elbow_left")-partPosition("shoulder_left")).normalized();
+        n.push_back(temp2);
+
+        c.push_back(partPosition("shoulder_right"));
+        temp2 = (partPosition("shoulder_left")-partPosition("shoulder_right")).normalized();
+        //temp1 = (partPosition("elbow_right")-partPosition("shoulder_right")).normalized();
+        n.push_back(temp2);
+
+        c.push_back(partPosition("wist"));
+        temp1 = (partPosition("wist")-partPosition("neck")).normalized();
+        n.push_back(temp1+QVector3D(0.01f,0.01f,0.01f));
+
+        //c.push_back(partPosition("elbow_left"));
+        //c.push_back((partPosition("shoulder_left")-partPosition("elbow_left"))*0.2f+partPosition("elbow_left"));
+        c.push_back(partPosition("elbow_left"));
+        temp1 = (partPosition("elbow_left")-partPosition("shoulder_left")).normalized();
+        temp2 = (partPosition("hand_left")-partPosition("elbow_left")).normalized();
+        //n.push_back((temp1+temp2)/2);
+        n.push_back(-temp1);
+
+        //c.push_back(partPosition("elbow_right"));
+        c.push_back(partPosition("elbow_right"));
+        temp1 = (partPosition("elbow_right")-partPosition("shoulder_right")).normalized();
+        temp2 = (partPosition("hand_right")-partPosition("elbow_right")).normalized();
+        //n.push_back((temp1+temp2)/2);
+        n.push_back(-temp1);
+
+        c.push_back(partPosition("knee_left"));
+        temp1 = (partPosition("feet_left")-partPosition("knee_left")).normalized();
+        n.push_back(-temp1+QVector3D(0.01f,0.01f,0.01f));
+
+        c.push_back(partPosition("knee_right"));
+        temp1 = (partPosition("feet_right")-partPosition("knee_right")).normalized();
+        n.push_back(-temp1+QVector3D(0.01f,0.01f,0.01f));
+
+        c.push_back(partPosition("body"));
+        temp1 = (partPosition("neck")-partPosition("wist")).normalized();
+        n.push_back(-temp1+QVector3D(0.01f,0.01f,0.01f));
+
+        c.push_back(partPosition("body"));
+        temp1 = (partPosition("neck")-partPosition("wist")).normalized();
+        QMatrix4x4 rotationMat;
+        rotationMat.rotate( 90, QVector3D(1,0,0));
+        temp1 = (QVector4D(temp1.x(),temp1.y(),temp1.z(),1)*rotationMat).toVector3DAffine();
+        n.push_back(-temp1+QVector3D(0.01f,0.01f,0.01f));
+
+        c.push_back(partPosition("body"));
+        temp1 = (partPosition("neck")-partPosition("wist")).normalized();
+        rotationMat.setToIdentity();
+        rotationMat.rotate( 90, QVector3D(0,0,1));
+        temp1 = (QVector4D(temp1.x(),temp1.y(),temp1.z(),1)*rotationMat).toVector3DAffine();
+        n.push_back(-temp1+QVector3D(0.01f,0.01f,0.01f));
     }
 
 };

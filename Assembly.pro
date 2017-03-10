@@ -26,10 +26,13 @@ SOURCES += main.cpp\
         modelmanager_support.cpp \
         modelmanager_utility.cpp \
         #modelmanager_utility_unusedcodebackup.cpp
-    maintainthread.cpp
+        maintainthread.cpp \
+    geometry.cpp \
+    mainwindow_unused.cpp \
+    quickwindow.cpp \
+    form.cpp
 
-HEADERS  += mainwindow.h \
-        pch.h\
+HEADERS  += pch.h\
         viewmanager.h\
         modelmanager.h\
         modelviewer.h\
@@ -44,13 +47,19 @@ HEADERS  += mainwindow.h \
         skelmanager.h \
         maintainthread.h \
         maintainvar.h \
-        mainwindow_support.h
+        mainwindow_support.h \
+        mainwindow.h \
+    geometry.h \
+    quickwindow.h \
+    form.h
 
 PRECOMPILED_HEADER = pch.h #pch_cgal.h
 QMAKE_CXXFLAGS_DEBUG -= -g
 QMAKE_CXXFLAGS_RELEASE -= -O2
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    quickwindow.ui \
+    form.ui
 
 RESOURCES += \
     standarshader.qrc \

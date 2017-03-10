@@ -27,6 +27,7 @@ public:
     void stateInit();
     void loadSkelSup();
     void fill(int tar);
+
 };
 
 #endif // MAINWINDOW_SUPPORT_H

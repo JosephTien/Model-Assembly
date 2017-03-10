@@ -36,11 +36,13 @@ void MainWindow_support::applyCSG(char c, int er, int ee){
 }
 
 void MainWindow_support::drawCircleOnPlane(){
+    //std::cout << "          drawCircle on " << var->tarObj << std::endl;
     float r = getModel(var->tarObj)->connectorRadii_ori * 0.95;
     QVector3D c = getModel(var->tarObj)->connectorCenter_ori;
     QVector3D n = getModel(var->tarObj)->connectorNormal_ori;
     int div = ui->edgeNum->value();
     getModel(var->tarObj)->circleOnPlane(c,n,r,div,var->cmpstate);
+    //std::cout << "              drawCircle on " << var->tarObj << std::endl;
 }
 
 void MainWindow_support::putskelass(){
@@ -83,6 +85,8 @@ void MainWindow_support::stateInit(){
 void MainWindow_support::loadSkelSup(){
     var->skelMgr.load(var->skelMgr.path);
     var->skelMgr.getCutInfo(var->cuttingpoint, var->cuttingpnorm);
+    var->skelMgr.getCutInfo2(var->cuttingpoint2, var->cuttingpnorm2);
+    var->IsReverseN =  var->skelMgr.getCutInfoIsReverseN();
     putskelass();//contain "update()"
     ui->showSkel->setCheckable(true);
     ui->showSkel->setChecked(true);
@@ -90,11 +94,19 @@ void MainWindow_support::loadSkelSup(){
     ui->showPlate->setChecked(false);
     var->skelMgr.loaded = true;
 }
+
+//void MainWindow_support::fill(int tar){
+//    cgaltool.fillHole(getModel(tar)->vertices_ori, getModel(tar)->indices);
+//    iglMachine.reset();iglMachine.readFile("temp","temp.off");
+//    iglMachine.get("temp",getModel(tar)->vertices_ori, getModel(tar)->indices);
+//    getModel(tar)->applyModelMatrix_force();
+//    getModel(tar)->refresh();
+//}
+
 void MainWindow_support::fill(int tar){
-    cgaltool.fillHole(getModel(tar)->vertices_ori, getModel(tar)->indices);
-    iglMachine.reset();iglMachine.readFile("temp","temp.off");
-    iglMachine.get("temp",getModel(tar)->vertices_ori, getModel(tar)->indices);
+    std::string mstr = cgaltool.fillHoleAndGetStr(getModel(var->tarObj)->vertices_ori, getModel(var->tarObj)->indices);
+    cgaltool.readFromOFFStream(getModel(var->tarObj)->vertices_ori, getModel(var->tarObj)->indices,mstr);
+    mstr.clear();
     getModel(tar)->applyModelMatrix_force();
     getModel(tar)->refresh();
 }
-

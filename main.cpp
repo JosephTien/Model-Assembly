@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "quickwindow.h"
 #include <QApplication>
 #include <QSurfaceFormat>
 #include "pch.h"
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     setOpenGLSurfaceFormat();
     initGLEW();
-    MainWindow window;
-    window.show();
+    QuickWindow quickwindow;
+    quickwindow.show();
     return app.exec();
 }

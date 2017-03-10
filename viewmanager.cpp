@@ -13,7 +13,7 @@ ViewManager* ViewManager::GetInstance()
 ViewManager::ViewManager()
 {
     //eyePosition = QVector3D(0, 0, 2.5f);
-    eyePosition = QVector3D(0, 0, 200.0f);
+    eyePosition = QVector3D(0, 0, 1000.0f);
     eyeLookPosition = QVector3D(0, 0, 0);
     QVector3D up = QVector3D(0, 1, 0);
     viewMatrix.lookAt(eyePosition, eyeLookPosition, up);
@@ -28,7 +28,10 @@ QMatrix4x4 ViewManager::GetViewRotationMatrix()
 }
 QMatrix4x4 ViewManager::GetViewTranslationMatrix()
 {
-    return viewTranslationMatrix;
+    QMatrix4x4 mat = viewTranslationMatrix;
+    mat.scale(initScaleFactor);
+    mat.translate(translateFactor);
+    return mat;
 }
 
 QMatrix4x4 ViewManager::GetViewTranslationRotationMatrix()
@@ -38,7 +41,11 @@ QMatrix4x4 ViewManager::GetViewTranslationRotationMatrix()
 
 QMatrix4x4 ViewManager::GetViewMatrix()
 {
-    return viewMatrix*viewTranslationMatrix*viewRotationMatrix;
+    QMatrix4x4 rtn = viewMatrix*viewTranslationMatrix*viewRotationMatrix;
+    rtn.scale(initScaleFactor);
+    rtn.translate(translateFactor);
+    return rtn;
+
 }
 
 QMatrix4x4 ViewManager::GetProjectionMatrix(float aspect)
@@ -46,18 +53,19 @@ QMatrix4x4 ViewManager::GetProjectionMatrix(float aspect)
     QMatrix4x4 projectionMatrix;
     projectionMatrix.setToIdentity();
     if(ortho) {
-        float size = 1.5f * zoom;
+        float size = 1.5f * zoom * initZoom;
         projectionMatrix.ortho(-aspect * size, aspect * size, -size, size, 1.5f-0.367f, 3.5f+0.367f); // 0.367 ~= (sqrt(3)-1)/2
     } else {
         //projectionMatrix.perspective(75.0f * zoom, aspect, 1.5f-0.367f, 3.5f+0.367f); // 0.367 ~= (sqrt(3)-1)/2
         eyelookdis = (eyePosition - eyeLookPosition).length();
-        projectionMatrix.perspective(perspangle * zoom, aspect, eyelookdis-clipdis, eyelookdis+clipdis);
+        projectionMatrix.perspective(perspangle * zoom * initZoom, aspect, eyelookdis-clipdis, eyelookdis+clipdis);
     }
     return projectionMatrix;
 }
 
 QMatrix4x4 ViewManager::GetViewProjectionMatrix(float aspect)
 {
+
     return GetProjectionMatrix(aspect) * GetViewMatrix();
 }
 
@@ -75,6 +83,7 @@ QMatrix4x4 ViewManager::GetModelViewProjectionMatrix(float aspect, int idx)
 {
     return GetViewProjectionMatrix(aspect) * GetModelMatrix(idx);
 }
+
 QMatrix4x4 ViewManager::GetModelViewProjectionMatrix_ass(float aspect, int idx)
 {
     return GetViewProjectionMatrix(aspect) * GetModelMatrix_ass(idx);

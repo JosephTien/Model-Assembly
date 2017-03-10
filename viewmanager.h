@@ -56,7 +56,7 @@ public:
 
     float eyelookdis;
     float perspangle = 75.0f;
-    float clipdis = 100.0f;
+    float clipdis = 500.0f;
     float zoom = 1.0f;
     QVector3D eyePosition;
     QVector3D eyeLookPosition;
@@ -97,6 +97,12 @@ public:
     void setControlType(int tar){controlType=tar;}//0 : view,//1 : model
     int getControlType(){return controlType;}//0 : view,//1 : model
     void setFixAxis(QVector2D aa){allowAxis = aa;}//1 : x; 2 : y;
+
+    float initZoom=0.25f;
+    float initScaleFactor = 2.0f;
+    QVector3D translateFactor=QVector3D(0,-50,0);
+    inline float getZoom(){return zoom * initZoom;}
+
 
 };
 

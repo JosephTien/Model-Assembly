@@ -8,5 +8,10 @@
         <file>object/cube10X10_dense.obj</file>
         <file>object/s2_cube10X10.obj</file>
         <file>object/s2_cylinder10X10.obj</file>
+        <file>object/spca.obj</file>
+        <file>object/spcb.obj</file>
+        <file>object/spcc.obj</file>
+        <file>object/spca2.obj</file>
+        <file>object/spcb2.obj</file>
     </qresource>
 </RCC>

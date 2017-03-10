@@ -2,9 +2,59 @@
 #define MODELMANAGER_H
 #include "pch.h"
 #include "looplist.h"
-#define minThre ((float)(1.0e-4))
+#include "geometry.h"
+//#define minThre ((float)(1.0e-4))
 
 typedef std::vector<QVector3D> vecq3d;
+
+class Pair{
+public:
+    QVector3D a;
+    QVector3D b;
+    Pair(QVector3D a,QVector3D b){
+        this->a = a;
+        this->b = b;
+    }
+    float distance(){
+        return (a-b).length();
+    }
+    QVector3D mid(){
+        return (a+b)/2;
+    }
+    bool projIntsec(QVector3D c, Pair ano){
+        QVector3D ca = (a-c).normalized();
+        QVector3D cb = (b-c).normalized();
+        QVector3D canoa = (ano.a-c).normalized();
+        QVector3D canob = (ano.b-c).normalized();
+        if(QVector3D::dotProduct(QVector3D::crossProduct(ca, canoa), QVector3D::crossProduct(canoa, cb))>0)
+            if(QVector3D::dotProduct(ca+cb,canoa)>0)return true;
+        if(QVector3D::dotProduct(QVector3D::crossProduct(ca, canob), QVector3D::crossProduct(canob, cb))>0)
+            if(QVector3D::dotProduct(ca+cb,canob)>0)return true;
+        if(QVector3D::dotProduct(QVector3D::crossProduct(canoa, ca), QVector3D::crossProduct(ca, canob))>0)
+            if(QVector3D::dotProduct(canoa+canob,ca)>0)return true;
+        if(QVector3D::dotProduct(QVector3D::crossProduct(canoa, cb), QVector3D::crossProduct(cb, canob))>0)
+            if(QVector3D::dotProduct(canoa+canob,cb)>0)return true;
+        return false;
+    }
+    bool isLinked(Pair ano){
+        if((a-ano.a).length()<minThre)return true;
+        else if((b-ano.a).length()<minThre)return true;
+        else if((a-ano.b).length()<minThre)return true;
+        else if((b-ano.b).length()<minThre)return true;
+        return false;
+    }
+    QVector3D proj(QVector3D v){
+        QVector3D abn = (b - a).normalized();
+        QVector3D av   = (v - a);
+        //QVector3D v = pairs[i].mid();
+        v = QVector3D::dotProduct(abn, av) * abn + a;
+        return v;
+    }
+    float length(){
+        return (a-b).length();
+
+    }
+};
 
 class Edge{
 public:
@@ -132,6 +182,9 @@ public:
     void rotateX(float angle);
     void rotateY(float angle);
     void rotateTo(QVector3D vec);
+    void rotateTo_u(QVector3D vec);
+    void rotateFrom(QVector3D vec);
+    void rotateFrom_u(QVector3D vec);
     void setViewRotation(QMatrix4x4 m);
     void translate(QVector3D movement);
     void translate_pure(QVector3D movement);
@@ -146,6 +199,7 @@ public:
     void ResetView();
     void applyModelMatrix_force();
     void applyModelMatrix();
+    void renewByMatrix();
     void regenNormals();
     void scaleDepend_ori(QVector3D c, float valx, float valy, float valz);
     void fix();
@@ -175,12 +229,18 @@ public:
     vecq3d getSelecPointsByIdxs();
     vecq3d getSelecPointsByIdxs_ori();
     void clearConnector();
+    float minY();
+    QVector3D minYVertice_ori();
+    QVector3D minZVertice_ori();
+    QVector3D averageVertice_ori();
     /*advanced calculation function*/
     std::vector<int> nRingNeighbor(int root, int rings);
     void fitAllSelecIdxs();
     void fitSelecIdxs(int tar);
     int calDetourByPlane();
     int calDetourByPlane(QVector3D c,QVector3D n);
+    float calCutArea();
+    float calCutArea(QVector3D &c,QVector3D &n, float &radii, bool autofix, float &angleCal);
     void cutByDetour(int state);
     void fillByDetour();
     void regenByPlateIntersec();
@@ -191,6 +251,7 @@ public:
     void circleOnPlane(QVector3D c, QVector3D n, float radii, int div);
     void linkContour(Plane mainPlane, std::vector<int> contourIdx);
     void produceFace();
+    void extractPiece(int state);
     std::vector<int> bfs(std::vector<bool> &visited, int rootIdx);
     /*data support*/
     QVector3D detourNormal();
@@ -209,6 +270,7 @@ public:
     bool isCrossPlane(QVector3D v1, QVector3D v2, QVector3D s1, QVector3D s2, QVector3D s3);
     float pointDistanceToPlane(QVector3D v, QVector3D s1, QVector3D s2, QVector3D s3);
     float dotProduct(QVector3D a,QVector3D b);
+    bool checkColumnBound(QVector3D c,QVector3D n, float r, float l);
 //    /*advanced calculation function, unused code backup*/
 //    int calDetourByBfs();
 //    void gendetourPlane(QVector3D c);

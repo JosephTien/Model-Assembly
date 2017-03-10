@@ -17,9 +17,13 @@ public:
     int cutcnt=0;
     std::vector<QVector3D> cuttingpoint;
     std::vector<QVector3D> cuttingpnorm;
+    std::vector<QVector3D> cuttingpoint2;
+    std::vector<QVector3D> cuttingpnorm2;
+    std::vector<bool> IsReverseN;
     bool locked=false;
     void lock(){locked=true;}
-    void unlock(){locked=false;}
+    void unlock(){if(!splock)locked=false;}
+    bool splock = false;
     int cmpstate = 0;
 };
 
